@@ -1,6 +1,6 @@
 {
     "name": "mime-es",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "description": "This is a library for mime types. It provides an ESM and CJS build.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
