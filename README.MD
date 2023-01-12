@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/mime-es/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/mime-es?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-This is library for mime types. It provides an ESM and CJS build.
+This is a library for mime types. It provides an ESM and CJS build.
 
 **Table of Contents**
 
