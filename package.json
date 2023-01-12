@@ -13,7 +13,6 @@
         }
     },
     "files": [
-        "assets/",
         "dist/"
     ],
     "scripts": {
