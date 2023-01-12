@@ -1,6 +1,6 @@
 {
-    "name": "mime-es",
-    "version": "1.0.2",
+    "name": "mime-explorer",
+    "version": "0.0.0",
     "description": "This is a library for mime types. It provides an ESM and CJS build.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -42,12 +42,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/mime-es.git"
+        "url": "git+https://github.com/Tada5hi/mime-explorer.git"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/mime-es/issues"
+        "url": "https://github.com/Tada5hi/mime-explorer/issues"
     },
-    "homepage": "https://github.com/Tada5hi/mime-es#readme",
+    "homepage": "https://github.com/Tada5hi/mime-explorer#readme",
     "devDependencies": {
         "@babel/core": "^7.20.2",
         "@babel/preset-env": "^7.20.2",

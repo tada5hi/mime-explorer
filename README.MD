@@ -1,9 +1,9 @@
-# mime-es ☂
+# mime-explorer ☂
 
-[![npm version](https://badge.fury.io/js/mime-es.svg)](https://badge.fury.io/js/mime-es)
-[![main](https://github.com/tada5hi/mime-es/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/mime-es/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/tada5hi/mime-es/branch/master/graph/badge.svg?token=80LA00PIGM)](https://codecov.io/gh/tada5hi/mime-es)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/mime-es/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/mime-es?targetFile=package.json)
+[![npm version](https://badge.fury.io/js/mime-explorer.svg)](https://badge.fury.io/js/mime-explorer)
+[![main](https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/tada5hi/mime-explorer/branch/master/graph/badge.svg?token=80LA00PIGM)](https://codecov.io/gh/tada5hi/mime-explorer)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/mime-explorer/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/mime-explorer?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
 This is a library for mime types. It provides an ESM (136kb) and CJS (136kb) build.
@@ -17,7 +17,7 @@ This is a library for mime types. It provides an ESM (136kb) and CJS (136kb) bui
 ## Installation
 
 ```bash
-npm install mime-es --save
+npm install mime-explorer --save
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ npm install mime-es --save
 To get the mime type for a given path or extension:
 
 ```typescript
-import { getType } from 'mime-es';
+import { getType } from 'mime-explorer';
 
 getType('txt');
 // => 'text/plain'
@@ -37,7 +37,7 @@ getType('json');
 To get the file extension for a given mime type:
 
 ```typescript
-import { getExtension } from 'mime-es';
+import { getExtension } from 'mime-explorer';
 
 getExtension('text/plain');
 // => 'txt'
@@ -49,7 +49,7 @@ getExtension('application/json');
 To get meta information for a mime type:
 
 ```typescript
-import { get } from 'mime-es';
+import { get } from 'mime-explorer';
 
 get('text/plain');
 /*
