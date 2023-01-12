@@ -9,6 +9,6 @@ const fs = require('node:fs');
 const mimeDb = require('mime-db');
 const path = require("node:path");
 
-fs.writeFileSync(path.join(__dirname, '..', 'assets', 'db.json'), JSON.stringify(mimeDb, undefined, 4), {
+fs.writeFileSync(path.join(__dirname, '..', 'src', 'db.json'), JSON.stringify(mimeDb, undefined, 4), {
     encoding: 'utf-8'
 });

@@ -6,7 +6,7 @@
  */
 
 import { TypeMap, TypeMeta } from './type';
-import db from '../assets/db.json';
+import db from './db.json';
 
 const map : Record<string, TypeMeta> = {};
 const extensionMap : Record<string, string> = {};
