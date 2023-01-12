@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/Tada5hi/mime-es/compare/v1.0.1...v1.0.2) (2023-01-12)
+
+
+### Bug Fixes
+
+* typescript type generation ([238d3b6](https://github.com/Tada5hi/mime-es/commit/238d3b67d8fef2c05709d90ad09575422ab6b19c))
+
 ## [1.0.1](https://github.com/Tada5hi/mime-es/compare/v1.0.0...v1.0.1) (2023-01-12)
 
 
