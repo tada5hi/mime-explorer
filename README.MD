@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/mime-es.svg)](https://badge.fury.io/js/mime-es)
 [![main](https://github.com/tada5hi/mime-es/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/mime-es/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/tada5hi/mime-es/branch/master/graph/badge.svg?token=0VL41WO0CG)](https://codecov.io/gh/tada5hi/mime-es)
+[![codecov](https://codecov.io/gh/tada5hi/mime-es/branch/master/graph/badge.svg?token=80LA00PIGM)](https://codecov.io/gh/tada5hi/mime-es)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/mime-es/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/mime-es?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
@@ -44,6 +44,43 @@ getExtension('text/plain');
 
 getExtension('application/json');
 // => 'json'
+```
+
+To get meta information for a mime type:
+
+```typescript
+import { get } from 'mime-es';
+
+get('text/plain');
+/*
+{
+    "source": "iana",
+    "compressible": true,
+    "extensions": [
+        "txt",
+        "text",
+        "conf",
+        "def",
+        "list",
+        "log",
+        "in",
+        "ini"
+    ]
+}
+ */
+
+get('application/json');
+/*
+{
+    "source": "iana",
+    "charset": "UTF-8",
+    "compressible": true,
+    "extensions": [
+        "json",
+        "map"
+    ]
+}
+ */
 ```
 
 ## License
