@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import commonjs from '@rollup/plugin-commonjs';
+import swc from '@rollup/plugin-swc';
 import resolve from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
-import babel from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import pkg from './package.json' assert {type: 'json'};
 
@@ -27,23 +26,10 @@ export default [
             // Allows node_modules resolution
             resolve({ extensions}),
 
-            // Allow bundling cjs modules. Rollup doesn't understand cjs
-            commonjs(),
-
             json(),
 
-            // Compile TypeScript/JavaScript files
-            babel({
-                extensions,
-                babelHelpers: 'bundled',
-                include: [
-                    'src/**/*'
-                ],
-                presets: [
-                    "@babel/env",
-                    "@babel/typescript"
-                ]
-            }),
+            swc(),
+
             terser(),
         ],
         output: [

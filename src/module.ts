@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TypeMap, TypeMeta } from './type';
+import type { TypeMap, TypeMeta } from './type';
 import db from './db.json';
 
 const map : Record<string, TypeMeta> = {};
