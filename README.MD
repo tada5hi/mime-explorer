@@ -6,7 +6,10 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/mime-explorer/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/mime-explorer?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-This is a library for mime types. It provides an ESM (136kb) and CJS (136kb) build.
+A library, which streamlines MIME type management, offering a simple interface to retrieve MIME types,
+corresponding file extensions, and meta information—ideal for tasks ranging from HTTP header interaction
+to general file-related operations.
+It provides an ESM (136kb) and CJS (136kb) build.
 
 **Table of Contents**
 
