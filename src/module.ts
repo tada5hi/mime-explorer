@@ -118,7 +118,7 @@ export function getExtension(input: string) : string | undefined {
 }
 
 /**
- * Get metae information associated with a mime type.
+ * Retrieve meta information associated with a mime type.
  *
  * @param input
  */
