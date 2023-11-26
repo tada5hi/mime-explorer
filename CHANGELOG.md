@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Tada5hi/mime-explorer/compare/v1.0.0...v1.1.0) (2023-11-26)
+
+
+### Features
+
+* bump (dev-) dependencies ([6d0915f](https://github.com/Tada5hi/mime-explorer/commit/6d0915fb4136eeb686c0e15d9c761dbec0ce8b00))
+
 # 1.0.0 (2023-01-12)
 
 
