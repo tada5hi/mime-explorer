@@ -1,4 +1,4 @@
-import type { TypeMap, TypeMeta } from './type';
+import type { TypeMap, TypeMeta } from './types';
 import db from './db.json';
 
 const map : Record<string, TypeMeta> = {};
@@ -11,9 +11,7 @@ const extensionMap : Record<string, string> = {};
  * @param value
  */
 export function define(key: string, value: string[] | TypeMeta) {
-    let meta : TypeMeta = {
-        extensions: [],
-    };
+    let meta : TypeMeta = { extensions: [] };
 
     if (Array.isArray(value)) {
         meta.extensions = value;
@@ -22,6 +20,10 @@ export function define(key: string, value: string[] | TypeMeta) {
             ...meta,
             ...value,
         };
+    }
+
+    if (typeof meta.extensions === 'undefined') {
+        meta.extensions = [];
     }
 
     if (meta.extensions.length === 0) {
@@ -59,8 +61,9 @@ export function undefine(input: string) {
     delete map[input];
 
     const keys = Object.keys(extensionMap);
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i] as string;
+
+    for (const key_ of keys) {
+        const key = key_ as string;
 
         if (extensionMap[key] === input) {
             delete extensionMap[key];
@@ -75,8 +78,8 @@ export function undefine(input: string) {
  */
 export function defineMany(typeMap: TypeMap) {
     const keys : string[] = Object.keys(typeMap);
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
+
+    for (const key of keys) {
         if (key) {
             define(key, typeMap[key] as string[] | TypeMeta);
         }
@@ -109,8 +112,10 @@ export function getType(input: string) : string | undefined {
  */
 export function getExtension(input: string) : string | undefined {
     const meta = get(input);
+
     if (meta) {
         const ext = meta.extensions[0] as string;
+
         return (ext[0] !== '*') ? ext : ext.slice(1);
     }
 
@@ -124,6 +129,7 @@ export function getExtension(input: string) : string | undefined {
  */
 export function get(input: string) : TypeMeta | undefined {
     const type = /^\s*([^;\s]*)/.test(input) && RegExp.$1;
+
     if (!type) {
         return undefined;
     }
