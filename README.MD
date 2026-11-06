@@ -4,7 +4,6 @@
 [![main](https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/tada5hi/mime-explorer/branch/master/graph/badge.svg?token=80LA00PIGM)](https://codecov.io/gh/tada5hi/mime-explorer)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/mime-explorer/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/mime-explorer?targetFile=package.json)
-[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
 A versatile library that simplifies MIME type management,
 providing a user-friendly interface to effortlessly retrieve MIME types
