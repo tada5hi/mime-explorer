@@ -6,11 +6,18 @@ import { describe, expect, it } from 'vitest';
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {define, getExtension, getType, undefine} from "../../src";
+import {
+    define,
+    defineMany,
+    getExtension,
+    getType,
+    undefine,
+} from '../../src';
 
 describe('src/module.ts', () => {
     it('should get extension', () => {
         let extension = getExtension('application/json');
+
         expect(extension).toEqual('json');
 
         extension = getExtension('text/plain');
@@ -24,10 +31,11 @@ describe('src/module.ts', () => {
         const extension = getExtension('json');
 
         expect(extension).toBeUndefined();
-    })
+    });
 
     it('should get type', () => {
         let type = getType('.json');
+
         expect(type).toEqual('application/json');
 
         type = getType('xxx/foo.json');
@@ -38,23 +46,28 @@ describe('src/module.ts', () => {
 
         type = getType('txt');
         expect(type).toEqual('text/plain');
-    })
+    });
 
     it('should not get type', () => {
         const type = getType('foo');
 
         expect(type).toBeUndefined();
-    })
+    });
 
     it('should define/undefine type', () => {
         define('foo/bar', ['foo']);
 
         let type = getType('foo');
+
         expect(type).toEqual('foo/bar');
 
         undefine('foo/bar');
 
         type = getType('foo');
         expect(type).toBeUndefined();
-    })
-})
+    });
+});
+
+it('accepts explicitly undefined extensions in a partial type map', () => {
+    expect(() => defineMany({ 'application/x-empty-test': { extensions: undefined } })).not.toThrow();
+});

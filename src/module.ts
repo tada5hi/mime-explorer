@@ -22,6 +22,10 @@ export function define(key: string, value: string[] | TypeMeta) {
         };
     }
 
+    if (typeof meta.extensions === 'undefined') {
+        meta.extensions = [];
+    }
+
     if (meta.extensions.length === 0) {
         return;
     }
