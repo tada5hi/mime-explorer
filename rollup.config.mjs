@@ -2,7 +2,7 @@ import swc from '@rollup/plugin-swc';
 import resolve from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
 import terser from '@rollup/plugin-terser';
-import pkg from './package.json' assert {type: 'json'};
+import pkg from './package.json' with {type: 'json'};
 
 const extensions = [
     '.js', '.jsx', '.ts', '.tsx',
