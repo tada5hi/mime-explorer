@@ -21,7 +21,7 @@
         "build:js": "tsdown",
         "build": "node bin/db.js && node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && npm run build:js",
         "commit": "npx git-cz",
-        "lint": "eslint src",
+        "lint": "eslint src AGENTS.md CLAUDE.md .agents",
         "lint:fix": "npm run lint -- --fix",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.mts",
         "test:coverage": "npm test -- --coverage",
