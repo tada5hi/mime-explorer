@@ -2,7 +2,7 @@
     <img src="https://raw.githubusercontent.com/tada5hi/mime-explorer/8b0d412c03e1ad24e0ca74b553d41bf2e16a2b6c/.github/assets/logo.svg" alt="mime-explorer: a cloud of file extensions" width="128" height="128" />
 </p>
 
-<h1 align="center">mime-explorer ☂</h1>
+<h1 align="center">mime-explorer</h1>
 
 <p align="center">
     <b>Look up MIME types, file extensions and metadata, and register your own mappings.</b><br>
