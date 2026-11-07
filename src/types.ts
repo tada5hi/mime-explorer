@@ -30,7 +30,7 @@ export interface IMimeExplorer {
     /** Register definitions keyed by MIME type, such as { 'text/plain': ['txt'] }. */
     defineTypes(items: TypeMetaCollection) : void;
 
-    /** Remove an exact lowercase MIME key and every extension owned by it. */
+    /** Remove a bare MIME key case-insensitively and every extension owned by it. */
     undefineType(mimeType: string) : void;
 
     /** Read metadata for a MIME type or Content-Type header, ignoring case and parameters. */

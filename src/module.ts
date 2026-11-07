@@ -14,8 +14,8 @@ export class MimeExplorer implements IMimeExplorer {
     // ----------------------------------------------
 
     constructor(collection: TypeMetaCollection = {}) {
-        this.metaMap = {};
-        this.extensionMap = {};
+        this.metaMap = Object.create(null);
+        this.extensionMap = Object.create(null);
 
         this.defineTypes(collection);
     }
@@ -73,8 +73,10 @@ export class MimeExplorer implements IMimeExplorer {
         }
     }
 
-    /** Remove an exact lowercase MIME key and every extension owned by it. */
+    /** Remove a bare MIME key case-insensitively and every extension owned by it. */
     undefineType(mimeType: string): void {
+        mimeType = mimeType.toLowerCase();
+
         if (!hasOwnProperty(this.metaMap, mimeType)) {
             return;
         }
@@ -116,19 +118,14 @@ export class MimeExplorer implements IMimeExplorer {
 
     /** Get a MIME type from an extension, filename or path, such as '.json' or '/files/a.json'. */
     getTypeByExtension(extensionOrPath: string): string | undefined {
-        const last = extensionOrPath
-            .replace(/^.*[/\\]/, '').toLowerCase();
+        const separator = Math.max(extensionOrPath.lastIndexOf('/'), extensionOrPath.lastIndexOf('\\'));
+        const last = extensionOrPath.slice(separator + 1);
+        const dot = last.lastIndexOf('.');
 
-        const ext = last
-            .replace(/^.*\./, '').toLowerCase();
-
-        const hasPath = last.length < extensionOrPath.length;
-        const hasDot = ext.length < last.length - 1;
-
-        if (!hasDot && hasPath) {
+        if (dot <= 0 && separator !== -1) {
             return undefined;
         }
 
-        return this.extensionMap[ext];
+        return this.extensionMap[last.slice(dot + 1).toLowerCase()];
     }
 }

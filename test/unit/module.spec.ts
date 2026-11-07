@@ -105,7 +105,7 @@ it('removes all owned aliases and preserves other types', () => {
     });
     mime.defineType('application/x-first', ['alias']);
 
-    mime.undefineType('application/x-first');
+    mime.undefineType('APPLICATION/X-FIRST');
 
     expect(mime.getMetaByType('application/x-first')).toBeUndefined();
     expect(mime.getTypeByExtension('shared')).toBeUndefined();
@@ -146,4 +146,94 @@ it('normalizes MIME headers and ignores definitions without extensions', () => {
 
 it.each(['/uploads/json', '/uploads/.json', 'unknown-extension'])('does not find a type for %s', (input) => {
     expect(new MimeExplorer(db).getTypeByExtension(input)).toBeUndefined();
+});
+
+it.each(['constructor', '__proto__', 'hasOwnProperty'])('does not resolve an unregistered object key: %s', (key) => {
+    const mime = new MimeExplorer();
+
+    expect(mime.getMetaByType(key)).toBeUndefined();
+    expect(mime.getExtensionByType(key)).toBeUndefined();
+    expect(mime.getTypeByExtension(key)).toBeUndefined();
+});
+
+it.each([
+    ['constructor', 'constructor'],
+    ['__proto__', '__proto__'],
+    ['hasOwnProperty', 'hasownproperty'],
+])('registers and removes a computed object key: %s', (key, normalized) => {
+    const mime = new MimeExplorer({ [key]: { extensions: [key], charset: 'UTF-8' } });
+    mime.defineType(key.toUpperCase(), { extensions: ['alias'], charset: 'ASCII' });
+    mime.defineType('application/x-other', [key, 'other']);
+
+    expect(mime.getMetaByType(key)).toEqual({ extensions: [normalized], charset: 'UTF-8' });
+    expect(mime.getTypeByExtension(key)).toBe(normalized);
+    expect(mime.getTypeByExtension('alias')).toBe(normalized);
+
+    mime.undefineType(key.toUpperCase());
+
+    expect(mime.getMetaByType(key)).toBeUndefined();
+    expect(mime.getTypeByExtension(key)).toBeUndefined();
+    expect(mime.getTypeByExtension('alias')).toBeUndefined();
+    expect(mime.getTypeByExtension('other')).toBe('application/x-other');
+});
+
+it.each([
+    ['.JSON', 'application/json'],
+    ['/uploads/report.final.JSON', 'application/json'],
+    ['C:\\uploads\\report.final.JSON', 'application/json'],
+    ['/a\nb.json', 'application/json'],
+    ['/uploads/json', undefined],
+    ['/uploads/.json', undefined],
+    ['/uploads/', undefined],
+    ['C:\\uploads\\', undefined],
+    ['report.unknown-extension', undefined],
+    ['report.json?download=1', undefined],
+    ['report.json#section', undefined],
+])('uses the final path segment and suffix for %j', (input, type) => {
+    expect(new MimeExplorer(db).getTypeByExtension(input)).toBe(type);
+});
+
+it('distinguishes Unicode extensions from paths when lowercasing expands a character', () => {
+    const mime = new MimeExplorer({ 'application/x-unicode': ['i\u0307'] });
+
+    expect(mime.getTypeByExtension('.İ')).toBe('application/x-unicode');
+    expect(mime.getTypeByExtension('/.İ')).toBeUndefined();
+    expect(mime.getTypeByExtension('/İ')).toBeUndefined();
+});
+
+it.each(['Σ', 'σ'])('normalizes the extracted extension consistently with registration: %s', (extension) => {
+    const mime = new MimeExplorer({ 'application/x-sigma': [extension] });
+
+    expect(mime.getTypeByExtension('Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('.Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('a.Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('/uploads/a.Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('C:\\uploads\\a.Σ')).toBe('application/x-sigma');
+});
+
+it('keeps ordinary and final Greek sigma extension owners independent', () => {
+    const mime = new MimeExplorer({
+        'application/x-sigma': ['σ'],
+        'application/x-final-sigma': ['ς'],
+    });
+
+    expect(mime.getTypeByExtension('a.Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('a.ς')).toBe('application/x-final-sigma');
+});
+
+it('resolves a literal final Greek sigma without an uppercase sigma alias', () => {
+    const mime = new MimeExplorer({ 'application/x-final-sigma': ['ς'] });
+
+    expect(mime.getTypeByExtension('a.ς')).toBe('application/x-final-sigma');
+    expect(mime.getTypeByExtension('a.Σ')).toBeUndefined();
+});
+
+it.each([
+    [' \tAPPLICATION/JSON; charset=ASCII', 'json'],
+    ['application/json ignored-text', 'json'],
+    ['', undefined],
+    [' ; charset=UTF-8', undefined],
+    ['application/x-unknown-demo; charset=UTF-8', undefined],
+])('normalizes the MIME header %j', (header, extension) => {
+    expect(new MimeExplorer(db).getExtensionByType(header)).toBe(extension);
 });
