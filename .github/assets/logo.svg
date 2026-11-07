@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="me-cloud-title">
+  <title id="me-cloud-title">mime-explorer: a cloud of file extensions</title>
+  <style>
+    :root{--ink:#8462be;--accent:#9272d4;--green:#2b927a}
+    text{font-family:ui-monospace,monospace;font-weight:700;fill:var(--ink)}
+  </style>
+  <path d="M54 199 C26 199 12 181 12 159 C12 138 25 122 45 118 C40 87 61 63 91 65 C102 30 152 24 174 56 C206 51 232 75 229 106 C251 116 253 149 237 166 C238 188 221 199 202 199Z" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linejoin="round"/>
+  <text x="101" y="78" font-size="20">.json</text>
+  <text x="58" y="112" font-size="23">.txt</text>
+  <text x="135" y="115" font-size="25" style="fill:var(--green)">.png</text>
+  <text x="35" y="150" font-size="25" style="fill:var(--green)">.pdf</text>
+  <text x="110" y="151" font-size="29">.html</text>
+  <text x="66" y="185" font-size="21">.xml</text>
+  <text x="145" y="184" font-size="21" style="fill:var(--green)">.zip</text>
+  <g opacity="1">
+    <animate attributeName="opacity" values="0.3;1" begin="-0.2s" dur="1s" repeatCount="1" fill="freeze"/>
+    <circle cx="191" cy="75" r="3" fill="var(--green)"/>
+    <circle cx="36" cy="173" r="3" fill="var(--accent)"/>
+    <circle cx="216" cy="139" r="3" fill="var(--green)"/>
+  </g>
+</svg>

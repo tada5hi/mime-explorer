@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-labelledby="me-lookup-title me-lookup-desc">
+  <title id="me-lookup-title">MIME lookups use two in-memory indexes</title>
+  <desc id="me-lookup-desc">getType extracts and lowercases a file extension, then looks it up in the extension index. get and getExtension strip MIME parameters and look up the metadata index; getExtension returns its first extension.</desc>
+  <style>
+    :root{--panel:#f8f6fc;--card:#ffffff;--ink:#302643;--muted:#665b78;--line:#b5a6cf;--purple:#7653ba;--green:#23836c;--tint:#edf8f4}
+    @media(prefers-color-scheme:dark){:root{--panel:#1b1725;--card:#272033;--ink:#ece5f6;--muted:#bcb0ce;--line:#6a5983;--purple:#bca1ee;--green:#64c8ac;--tint:#1a332b}}
+    text{font-family:system-ui,sans-serif;fill:var(--ink)}.code{font-family:ui-monospace,monospace;font-size:17px}.small{font-size:15px;fill:var(--muted)}.heading{font-size:18px;font-weight:650}.arrow{stroke:var(--line);stroke-width:2;fill:none;marker-end:url(#me-lookup-arrow)}
+  </style>
+  <defs><marker id="me-lookup-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="var(--line)"/></marker></defs>
+  <rect x="8" y="8" width="944" height="424" rx="18" fill="var(--panel)"/>
+  <text x="32" y="47" font-size="23" font-weight="650">One bundled database, two lookup indexes</text>
+  <rect x="32" y="76" width="260" height="118" rx="10" fill="var(--card)" stroke="var(--line)"/>
+  <text x="48" y="104" class="heading">getType('report.JSON')</text>
+  <text x="48" y="136" class="code">report.JSON → json</text>
+  <text x="48" y="167" class="small">Extract the final extension;</text>
+  <text x="48" y="185" class="small">lowercase it.</text>
+  <path d="M292 135 H338" class="arrow"/>
+  <rect x="340" y="76" width="274" height="118" rx="10" fill="var(--card)" stroke="var(--purple)"/>
+  <text x="356" y="104" class="heading">Extension index</text>
+  <text x="356" y="142" class="code">extensionMap['json']</text>
+  <text x="356" y="173" class="small">First registered mapping wins.</text>
+  <path d="M614 135 H660" class="arrow"/>
+  <rect x="662" y="76" width="266" height="118" rx="10" fill="var(--tint)" stroke="var(--green)"/>
+  <text x="678" y="104" class="heading">MIME type</text>
+  <text x="678" y="143" class="code">'application/json'</text>
+  <text x="678" y="173" class="small">Unknown extension: undefined</text>
+  <rect x="32" y="230" width="372" height="148" rx="10" fill="var(--card)" stroke="var(--line)"/>
+  <text x="48" y="260" class="heading">get() / getExtension()</text>
+  <text x="48" y="297" class="code">'application/json; charset=UTF-8'</text>
+  <text x="48" y="333" class="small">Strip parameters and leading whitespace;</text>
+  <text x="48" y="356" class="small">lowercase the MIME type.</text>
+  <path d="M404 304 H450" class="arrow"/>
+  <rect x="452" y="230" width="476" height="148" rx="10" fill="var(--card)" stroke="var(--green)"/>
+  <text x="468" y="260" class="heading">Metadata index: map['application/json']</text>
+  <text x="468" y="294" class="code">extensions: ['json', 'map']</text>
+  <text x="468" y="320" class="code">source: 'iana', charset: 'UTF-8'</text>
+  <text x="468" y="356" class="small">get() returns the record. getExtension() returns 'json'.</text>
+  <text x="32" y="411" class="small">The bundled mime-db data initializes both indexes when you import the module. Lookups perform no file or network I/O.</text>
+</svg>
