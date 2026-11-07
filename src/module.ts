@@ -1,140 +1,134 @@
-import type { TypeMap, TypeMeta } from './types';
-import db from './db.json';
+import type {
+    IMimeExplorer,
+    TypeMeta,
+    TypeMetaCollection,
+    TypeMetaInput,
+} from './types';
+import { hasOwnProperty } from './utils';
 
-const map : Record<string, TypeMeta> = {};
-const extensionMap : Record<string, string> = {};
+export class MimeExplorer implements IMimeExplorer {
+    protected metaMap : Record<string, TypeMeta>;
 
-/**
- * Define meta information/extensions for a mime type.
- *
- * @param key
- * @param value
- */
-export function define(key: string, value: string[] | TypeMeta) {
-    let meta : TypeMeta = { extensions: [] };
+    protected extensionMap : Record<string, string>;
 
-    if (Array.isArray(value)) {
-        meta.extensions = value;
-    } else {
-        meta = {
-            ...meta,
-            ...value,
-        };
+    // ----------------------------------------------
+
+    constructor(collection: TypeMetaCollection = {}) {
+        this.metaMap = {};
+        this.extensionMap = {};
+
+        this.defineTypes(collection);
     }
 
-    if (typeof meta.extensions === 'undefined') {
-        meta.extensions = [];
-    }
+    // ----------------------------------------------
 
-    if (meta.extensions.length === 0) {
-        return;
-    }
+    /** Register a MIME type and its extensions/metadata, keeping existing definitions. */
+    defineType(mimeType: string, value: string[] | TypeMetaInput): void {
+        let meta : TypeMeta = { extensions: [] };
 
-    meta.extensions = meta.extensions.map((t) => t.toLowerCase());
+        if (Array.isArray(value)) {
+            meta.extensions = value;
+        } else {
+            meta = {
+                ...meta,
+                ...value,
+            };
+        }
 
-    key = key.toLowerCase();
+        if (typeof meta.extensions === 'undefined') {
+            meta.extensions = [];
+        }
 
-    for (let j = 0; j < meta.extensions.length; j++) {
-        const ext = meta.extensions[j] as string;
+        if (meta.extensions.length === 0) {
+            return;
+        }
 
-        if (!Object.prototype.hasOwnProperty.call(extensionMap, ext)) {
-            extensionMap[ext] = key;
+        meta.extensions = meta.extensions.map((t) => t.toLowerCase());
+
+        mimeType = mimeType.toLowerCase();
+
+        for (let j = 0; j < meta.extensions.length; j++) {
+            const ext = meta.extensions[j] as string;
+
+            if (!hasOwnProperty(this.extensionMap, ext)) {
+                this.extensionMap[ext] = mimeType;
+            }
+        }
+
+        if (!hasOwnProperty(this.metaMap, mimeType)) {
+            this.metaMap[mimeType] = meta;
         }
     }
 
-    // Use first extension as default
-    if (!Object.prototype.hasOwnProperty.call(map, key)) {
-        map[key] = meta;
-    }
-}
+    /** Register definitions keyed by MIME type, such as { 'text/plain': ['txt'] }. */
+    defineTypes(items: TypeMetaCollection): void {
+        const keys = Object.keys(items);
 
-/**
- * Remove meta information.
- *
- * @param input
- */
-export function undefine(input: string) {
-    if (!Object.prototype.hasOwnProperty.call(map, input)) {
-        return;
-    }
+        for (const key of keys) {
+            if (!hasOwnProperty(items, key) || !items[key]) {
+                continue;
+            }
 
-    delete map[input];
-
-    const keys = Object.keys(extensionMap);
-
-    for (const key_ of keys) {
-        const key = key_ as string;
-
-        if (extensionMap[key] === input) {
-            delete extensionMap[key];
+            this.defineType(key, items[key]);
         }
     }
-}
 
-/**
- * Define multiple mime type -> extension/meta mappings.
- *
- * e.g. mime.define({'audio/ogg', ['oga', 'ogg', 'spx']});
- */
-export function defineMany(typeMap: TypeMap) {
-    const keys : string[] = Object.keys(typeMap);
+    /** Remove an exact lowercase MIME key and every extension owned by it. */
+    undefineType(mimeType: string): void {
+        if (!hasOwnProperty(this.metaMap, mimeType)) {
+            return;
+        }
 
-    for (const key of keys) {
-        if (key) {
-            define(key, typeMap[key] as string[] | TypeMeta);
+        delete this.metaMap[mimeType];
+
+        const keys = Object.keys(this.extensionMap);
+
+        for (const extension of keys) {
+            if (this.extensionMap[extension] === mimeType) {
+                delete this.extensionMap[extension];
+            }
         }
     }
-}
 
-/**
- * Lookup a mime type based on extension
- *
- * @param input
- */
-export function getType(input: string) : string | undefined {
-    const last = input.replace(/^.*[/\\]/, '').toLowerCase();
-    const ext = last.replace(/^.*\./, '').toLowerCase();
+    /** Read metadata for a MIME type or Content-Type header, ignoring case and parameters. */
+    getMetaByType(mimeType: string): TypeMeta | undefined {
+        const type = /^\s*([^;\s]*)/.test(mimeType) && RegExp.$1;
 
-    const hasPath = last.length < input.length;
-    const hasDot = ext.length < last.length - 1;
+        if (!type) {
+            return undefined;
+        }
 
-    if (hasDot || !hasPath) {
-        return extensionMap[ext];
+        return this.metaMap[type.toLowerCase()];
     }
 
-    return undefined;
-}
+    /** Get the default extension for a MIME type or Content-Type header, without a leading *. */
+    getExtensionByType(mimeType: string): string | undefined {
+        const meta = this.getMetaByType(mimeType);
 
-/**
- * Get the file extension associated with a mime type.
- *
- * @param input
- */
-export function getExtension(input: string) : string | undefined {
-    const meta = get(input);
+        const [ext] = meta?.extensions || [];
 
-    if (meta) {
-        const ext = meta.extensions[0] as string;
+        if (!ext) {
+            return undefined;
+        }
 
-        return (ext[0] !== '*') ? ext : ext.slice(1);
+        return ext[0] !== '*' ? ext : ext.slice(1);
     }
 
-    return undefined;
-}
+    /** Get a MIME type from an extension, filename or path, such as '.json' or '/files/a.json'. */
+    getTypeByExtension(extensionOrPath: string): string | undefined {
+        const last = extensionOrPath
+            .replace(/^.*[/\\]/, '').toLowerCase();
 
-/**
- * Retrieve meta information associated with a mime type.
- *
- * @param input
- */
-export function get(input: string) : TypeMeta | undefined {
-    const type = /^\s*([^;\s]*)/.test(input) && RegExp.$1;
+        const ext = last
+            .replace(/^.*\./, '').toLowerCase();
 
-    if (!type) {
-        return undefined;
+        const hasPath = last.length < extensionOrPath.length;
+        const hasDot = ext.length < last.length - 1;
+
+        if (!hasDot && hasPath) {
+            return undefined;
+        }
+
+        return this.extensionMap[ext];
     }
-
-    return map[type.toLowerCase()];
 }
-
-defineMany(db);
