@@ -11,9 +11,9 @@
 </p>
 
 <p align="center">
-    <a href="https://www.npmjs.com/package/mime-explorer"><img src="https://img.shields.io/npm/v/mime-explorer" alt="npm version" /></a>
-    <a href="https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml"><img src="https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
-    <a href="https://codecov.io/gh/tada5hi/mime-explorer"><img src="https://codecov.io/gh/tada5hi/mime-explorer/branch/master/graph/badge.svg" alt="Coverage" /></a>
+    <a href="https://www.npmjs.com/package/mime-explorer"><img src="https://img.shields.io/npm/v/mime-explorer" alt="mime-explorer version on npm" /></a>
+    <a href="https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml"><img src="https://github.com/tada5hi/mime-explorer/actions/workflows/main.yml/badge.svg" alt="Build and test workflow status" /></a>
+    <a href="https://codecov.io/gh/tada5hi/mime-explorer"><img src="https://codecov.io/gh/tada5hi/mime-explorer/branch/master/graph/badge.svg" alt="Test coverage on Codecov" /></a>
 </p>
 
 <p align="center">
@@ -52,6 +52,13 @@ mime.getMetaByType('application/json')?.charset;         // 'UTF-8'
     <img src="https://raw.githubusercontent.com/tada5hi/mime-explorer/master/.github/assets/lookup.svg" alt="getTypeByExtension uses the extension index. getMetaByType and getExtensionByType use the MIME metadata index. Each MimeExplorer instance has its own indexes." width="960" />
 </p>
 
+<details>
+<summary>How the lookup indexes work</summary>
+
+Each `MimeExplorer` instance owns two indexes, initialized from the definitions passed to its constructor. The extension index maps a file extension to its MIME type; `getTypeByExtension()` searches it using the final path segment and suffix. The MIME metadata index maps a MIME type to its record; `getMetaByType()` returns that record, and `getExtensionByType()` returns its first extension. Unknown lookups return `undefined`.
+
+</details>
+
 ## Installation
 
 ```bash
@@ -71,7 +78,17 @@ import db from 'mime-explorer/db';
 const mime = new MimeExplorer(db);
 ```
 
-`new MimeExplorer()` creates an empty registry for custom mappings. Importing `mime-explorer` alone does not load the database or create a shared registry. The `mime-explorer/db` entrypoint provides a typed default export in ESM and CommonJS builds, without JSON import attributes.
+For CommonJS:
+
+```javascript
+const { MimeExplorer } = require('mime-explorer');
+const db = require('mime-explorer/db');
+
+const mime = new MimeExplorer(db);
+mime.getTypeByExtension('/uploads/report.JSON'); // 'application/json'
+```
+
+`new MimeExplorer()` creates an empty registry for custom mappings. Importing `mime-explorer` alone does not load the database or create a shared registry. The `mime-explorer/db` entrypoint provides a typed ESM default export and the database directly through CommonJS `require()`, without JSON import attributes.
 
 ### Find a MIME type
 
@@ -143,7 +160,7 @@ mime.getTypeByExtension('pnote'); // undefined
 - An extension list must be nonempty. Missing, `undefined` or empty `extensions` make the definition a no-op.
 - The first definition of a MIME record wins. Each extension mapping is also first-wins, independently. Calling `defineType()` again can register new extensions without replacing the MIME record or its metadata.
 - To replace a MIME record, remove it with `undefineType()` before defining it again. Existing extension owners still win; removal does not restore an earlier owner.
-- `undefineType()` takes the exact lowercase MIME key, without parameters. It removes the record and every extension currently pointing to that key. Unknown keys are a no-op.
+- `undefineType()` takes a bare MIME key case-insensitively, without parameters. It removes the record and every extension currently pointing to that key. Unknown keys are a no-op.
 - Each instance owns its registry. Definitions are not shared with other instances or saved to disk.
 
 ### Metadata fields
