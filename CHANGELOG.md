@@ -18,6 +18,13 @@
 
 * bump version ([501294f](https://github.com/Tada5hi/mime-explorer/commit/501294fe010a96bd6360b720260a0b132444d8b3))
 
+## [1.1.1](https://github.com/tada5hi/mime-explorer/compare/v1.1.0...v1.1.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* **deps:** refresh MIME database and compatible development tooling ([2adcc30](https://github.com/tada5hi/mime-explorer/commit/2adcc3011159896253f192c302a24f451bc8a51b))
+
 ## [1.0.2](https://github.com/Tada5hi/mime-es/compare/v1.0.1...v1.0.2) (2023-01-12)
 
 
