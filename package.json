@@ -1,7 +1,7 @@
 {
     "name": "mime-explorer",
     "version": "1.1.0",
-    "description": "This is a library for mime types. It provides an ESM and CJS build.",
+    "description": "Look up MIME types, file extensions and metadata, and register your own mappings.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -25,7 +25,7 @@
         "lint:fix": "npm run lint -- --fix",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.mts",
         "test:coverage": "npm test -- --coverage",
-        "prepare": "npx husky install",
+        "prepare": "husky",
         "prepublishOnly": "npm run build"
     },
     "author": {
@@ -50,17 +50,17 @@
     },
     "homepage": "https://github.com/Tada5hi/mime-explorer#readme",
     "devDependencies": {
-        "@tada5hi/commitlint-config": "^1.1.4",
+        "@tada5hi/commitlint-config": "^1.3.3",
         "@tada5hi/eslint-config": "^3.3.1",
-        "@tada5hi/tsconfig": "^0.5.0",
-        "@types/node": "^24.10.1",
+        "@tada5hi/tsconfig": "^0.7.2",
+        "@types/node": "^24.19.2",
         "@vitest/coverage-v8": "^5.1.0",
-        "cross-env": "^7.0.3",
+        "cross-env": "^10.1.0",
         "eslint": "^10.14.0",
-        "husky": "^8.0.3",
-        "mime-db": "^1.52.0",
+        "husky": "^9.1.7",
+        "mime-db": "^1.54.0",
         "tsdown": "^0.23.7",
-        "typescript": "^5.3.2",
+        "typescript": "~6.0.3",
         "typescript-eslint": "^8.72.1",
         "vitest": "^5.1.0"
     }

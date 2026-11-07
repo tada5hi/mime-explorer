@@ -1,7 +1,10 @@
 {
     "extends": "@tada5hi/tsconfig",
     "compilerOptions": {
-        "module": "CommonJS",
+        "module": "Node16",
+        "moduleResolution": "Node16",
+        "verbatimModuleSyntax": false,
+        "rootDir": "src",
         "outDir": "dist",
         "esModuleInterop": true,
         "resolveJsonModule": true
