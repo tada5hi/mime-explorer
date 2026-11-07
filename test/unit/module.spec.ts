@@ -201,11 +201,31 @@ it('distinguishes Unicode extensions from paths when lowercasing expands a chara
     expect(mime.getTypeByExtension('/İ')).toBeUndefined();
 });
 
-it('lowercases the whole basename to preserve contextual Greek sigma', () => {
-    const mime = new MimeExplorer({ 'application/x-sigma': ['ς'] });
+it.each(['Σ', 'σ'])('normalizes the extracted extension consistently with registration: %s', (extension) => {
+    const mime = new MimeExplorer({ 'application/x-sigma': [extension] });
 
+    expect(mime.getTypeByExtension('Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('.Σ')).toBe('application/x-sigma');
     expect(mime.getTypeByExtension('a.Σ')).toBe('application/x-sigma');
     expect(mime.getTypeByExtension('/uploads/a.Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('C:\\uploads\\a.Σ')).toBe('application/x-sigma');
+});
+
+it('keeps ordinary and final Greek sigma extension owners independent', () => {
+    const mime = new MimeExplorer({
+        'application/x-sigma': ['σ'],
+        'application/x-final-sigma': ['ς'],
+    });
+
+    expect(mime.getTypeByExtension('a.Σ')).toBe('application/x-sigma');
+    expect(mime.getTypeByExtension('a.ς')).toBe('application/x-final-sigma');
+});
+
+it('resolves a literal final Greek sigma without an uppercase sigma alias', () => {
+    const mime = new MimeExplorer({ 'application/x-final-sigma': ['ς'] });
+
+    expect(mime.getTypeByExtension('a.ς')).toBe('application/x-final-sigma');
+    expect(mime.getTypeByExtension('a.Σ')).toBeUndefined();
 });
 
 it.each([

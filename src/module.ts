@@ -119,13 +119,13 @@ export class MimeExplorer implements IMimeExplorer {
     /** Get a MIME type from an extension, filename or path, such as '.json' or '/files/a.json'. */
     getTypeByExtension(extensionOrPath: string): string | undefined {
         const separator = Math.max(extensionOrPath.lastIndexOf('/'), extensionOrPath.lastIndexOf('\\'));
-        const last = extensionOrPath.slice(separator + 1).toLowerCase();
+        const last = extensionOrPath.slice(separator + 1);
         const dot = last.lastIndexOf('.');
 
         if (dot <= 0 && separator !== -1) {
             return undefined;
         }
 
-        return this.extensionMap[last.slice(dot + 1)];
+        return this.extensionMap[last.slice(dot + 1).toLowerCase()];
     }
 }
