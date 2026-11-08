@@ -4,7 +4,8 @@ export type TypeMeta = {
      */
     readonly source?: string,
     /**
-     * Extensions associated with the mime type. The first one is the default.
+     * Extensions associated with the mime type. The first one is the default; empty for a
+     * type known only by its metadata.
      */
     readonly extensions: readonly string[],
     /**
@@ -71,7 +72,7 @@ export interface IMimeExplorer {
      * Find the default file extension of a MIME type.
      *
      * @param contentType - A MIME type or Content-Type header, such as `text/html; charset=utf-8`.
-     * @returns The extension without a leading dot, such as `html`, or `undefined` when the type is unknown.
+     * @returns The extension without a leading dot, such as `html`, or `undefined` when the type is unknown or has no extensions.
      */
     getExtension(contentType: string) : string | undefined;
 }

@@ -19,6 +19,8 @@ type Records = Map<string, TypeMeta>;
 type Owners = Map<string, string>;
 type Failure = () => MimeExplorerError;
 
+const METADATA_FIELD_TYPES = new Map([['source', 'string'], ['charset', 'string'], ['compressible', 'boolean']]);
+
 export class MimeExplorer implements IMimeExplorer {
     #records: Records = new Map();
 
@@ -124,7 +126,11 @@ function applyDefinition(
     }
 
     if (declared.length === 0) {
-        failures.push(() => new MissingExtensionsError(type));
+        if (!isMetadataOnly(definition)) {
+            failures.push(() => new MissingExtensionsError(type));
+        } else if (!existing) {
+            records.set(type, freezeRecord({ ...definition, extensions: [] }));
+        }
 
         return;
     }
@@ -171,6 +177,16 @@ function readDefinition(value: unknown): TypeMetaInput {
 /** A printable form of any value, including objects without a usable `toString`. */
 function describeValue(value: unknown): string {
     return Object(value) === value ? Object.prototype.toString.call(value) : String(value);
+}
+
+/** Whether a definition without extensions still describes its type: only valid metadata fields, at least one set. */
+function isMetadataOnly(definition: TypeMetaInput): boolean {
+    const { extensions, ...metadata } = definition;
+    const fields = Object.entries(metadata).filter(([, value]) => value !== undefined);
+
+    return (extensions === undefined || Array.isArray(extensions)) &&
+        fields.length > 0 &&
+        fields.every(([key, value]) => typeof value === METADATA_FIELD_TYPES.get(key));
 }
 
 function hasDifferentMetadata(record: TypeMeta, definition: TypeMetaInput): boolean {
