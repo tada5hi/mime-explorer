@@ -1,4 +1,4 @@
-import { MimeExplorerError } from './mime-explorer-error.js';
+import { MimeExplorerError } from './mime-explorer-error.ts';
 
 /** A definition key has no MIME type, such as an empty string. */
 export class InvalidTypeError extends MimeExplorerError {

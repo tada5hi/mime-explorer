@@ -1,4 +1,4 @@
-import { MimeExplorerError } from './mime-explorer-error.js';
+import { MimeExplorerError } from './mime-explorer-error.ts';
 
 /** A definition lists no extensions, so its MIME type cannot be registered. */
 export class MissingExtensionsError extends MimeExplorerError {

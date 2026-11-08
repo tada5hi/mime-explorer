@@ -1,4 +1,4 @@
-import { MimeExplorerError } from './mime-explorer-error.js';
+import { MimeExplorerError } from './mime-explorer-error.ts';
 
 /** An extension can never be found by a lookup, such as 'tar.gz' or '*txt'. */
 export class InvalidExtensionError extends MimeExplorerError {

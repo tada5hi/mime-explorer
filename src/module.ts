@@ -5,15 +5,15 @@ import {
     MetadataConflictError,
     MissingExtensionsError,
     RegistrationError,
-} from './errors/index.js';
-import type { MimeExplorerError } from './errors/index.js';
+} from './errors/index.ts';
+import type { MimeExplorerError } from './errors/index.ts';
 import type {
     IMimeExplorer,
     RegisterOptions,
     TypeMeta,
     TypeMetaCollection,
     TypeMetaInput,
-} from './types.js';
+} from './types.ts';
 
 type Records = Map<string, TypeMeta>;
 type Owners = Map<string, string>;

@@ -1,4 +1,4 @@
-import { MimeExplorerError } from './mime-explorer-error.js';
+import { MimeExplorerError } from './mime-explorer-error.ts';
 
 /** A registered MIME type was defined again with different metadata. */
 export class MetadataConflictError extends MimeExplorerError {

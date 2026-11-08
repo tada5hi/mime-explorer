@@ -1,3 +1,3 @@
-export * from './errors/index.js';
-export * from './module.js';
-export * from './types.js';
+export * from './errors/index.ts';
+export * from './module.ts';
+export * from './types.ts';
