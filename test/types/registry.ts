@@ -1,6 +1,6 @@
-import { MimeExplorer } from '../../src';
+import { MimeExplorer, MimeExplorerError } from '../../src';
 import type {
-    IMimeExplorer, MimeExplorerError, TypeMap, TypeMeta, TypeMetaCollection,
+    IMimeExplorer, TypeMap, TypeMeta, TypeMetaCollection,
 } from '../../src';
 import db from '../../src/db';
 
@@ -21,9 +21,11 @@ mime.register(definitions);
 new MimeExplorer(legacyCollection);
 new MimeExplorer(db);
 
-const errors: readonly MimeExplorerError[] = mime.register(definitions, { throwOnFailure: true });
+const errors = mime.register(definitions, { throwOnFailure: true }) satisfies readonly MimeExplorerError[];
 // @ts-expect-error The returned error list is readonly.
 errors.push(errors[0] as MimeExplorerError);
+// @ts-expect-error The base error class is abstract.
+new MimeExplorerError();
 mime.unregister('text/x-note') satisfies boolean;
 
 const snapshot: TypeMeta | undefined = mime.getMeta('text/x-note');

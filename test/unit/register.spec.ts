@@ -65,6 +65,26 @@ describe('register() failures', () => {
         expect(mime.register({ 'text/plain': { extensions: ['txt'], charset: undefined } })).toEqual([]);
     });
 
+    it.each([
+        ['invalid extensions', { extensions: ['*bad'], charset: 'ASCII' }, InvalidExtensionError],
+        ['no extensions', { charset: 'ASCII' }, MissingExtensionsError],
+    ])('reports a metadata conflict alongside %s', (_label, definition, errorClass) => {
+        const errors = new MimeExplorer(seed).register({ 'text/plain': definition });
+
+        expect(errors).toHaveLength(2);
+        expect(errors.some((error) => error instanceof MetadataConflictError)).toBe(true);
+        expect(errors.some((error) => error instanceof errorClass)).toBe(true);
+
+        let thrown: unknown;
+        try {
+            new MimeExplorer(seed).register({ 'text/plain': definition }, { throwOnFailure: true });
+        } catch (error) {
+            thrown = error;
+        }
+
+        expect((thrown as RegistrationError).errors).toHaveLength(2);
+    });
+
     it('detects conflicts inside one batch', () => {
         const errors = new MimeExplorer().register({ 'x/a': ['same'], 'x/b': ['same'] });
 
@@ -132,6 +152,24 @@ describe('malformed input from untyped callers', () => {
         expect(errors[0]).toBeInstanceOf(InvalidExtensionError);
         expect(errors[0]).toMatchObject({ extension: '1' });
         expect(mime.getMeta('x/a')).toEqual({ extensions: ['good'] });
+    });
+
+    it('reports an extension that cannot be converted to a string', () => {
+        const definitions = JSON.parse('{ "x/a": [{ "toString": null }, "good"] }') as TypeMetaCollection;
+        const mime = new MimeExplorer();
+        const errors = mime.register(definitions);
+
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toBeInstanceOf(InvalidExtensionError);
+        expect(errors[0]).toMatchObject({ extension: '[object Object]' });
+        expect(mime.getType('good')).toBe('x/a');
+    });
+
+    it('treats null definitions as empty', () => {
+        const definitions = JSON.parse('null') as TypeMetaCollection;
+
+        expect(() => new MimeExplorer(definitions)).not.toThrow();
+        expect(new MimeExplorer().register(definitions)).toEqual([]);
     });
 
     it.each([[undefined], [null], [1]])('finds nothing for the input %j', (input) => {

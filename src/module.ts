@@ -93,7 +93,7 @@ export class MimeExplorer implements IMimeExplorer {
 function applyDefinitions(definitions: TypeMetaCollection, records: Records, owners: Owners): Failure[] {
     const failures: Failure[] = [];
 
-    for (const [mimeType, value] of Object.entries(definitions)) {
+    for (const [mimeType, value] of Object.entries(definitions ?? {})) {
         applyDefinition(mimeType, value, records, owners, failures);
     }
 
@@ -117,6 +117,11 @@ function applyDefinition(
 
     const definition = readDefinition(value);
     const declared = Array.isArray(definition.extensions) ? definition.extensions as readonly string[] : [];
+    const existing = records.get(type);
+
+    if (existing && hasDifferentMetadata(existing, definition)) {
+        failures.push(() => new MetadataConflictError(type));
+    }
 
     if (declared.length === 0) {
         failures.push(() => new MissingExtensionsError(type));
@@ -132,7 +137,7 @@ function applyDefinition(
         if (extension) {
             extensions.add(extension);
         } else {
-            failures.push(() => new InvalidExtensionError(type, String(input)));
+            failures.push(() => new InvalidExtensionError(type, describeValue(input)));
         }
     }
 
@@ -150,12 +155,6 @@ function applyDefinition(
         }
     }
 
-    const existing = records.get(type);
-
-    if (existing && hasDifferentMetadata(existing, definition)) {
-        failures.push(() => new MetadataConflictError(type));
-    }
-
     records.set(type, freezeRecord(existing ?
         { ...existing, extensions: [...new Set([...existing.extensions, ...extensions])] } :
         { ...definition, extensions: [...extensions] }));
@@ -167,6 +166,11 @@ function readDefinition(value: unknown): TypeMetaInput {
     }
 
     return typeof value === 'object' && value !== null ? value : {};
+}
+
+/** A printable form of any value, including objects without a usable `toString`. */
+function describeValue(value: unknown): string {
+    return Object(value) === value ? Object.prototype.toString.call(value) : String(value);
 }
 
 function hasDifferentMetadata(record: TypeMeta, definition: TypeMetaInput): boolean {
