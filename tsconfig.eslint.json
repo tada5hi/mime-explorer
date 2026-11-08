@@ -2,7 +2,7 @@
     "extends": "./tsconfig.json",
     "include": [
         "src/**/*.ts",
-        "commitlint.config.js",
+        "commitlint.config.cjs",
         "release.config.js"
     ]
 }

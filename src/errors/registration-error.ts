@@ -1,4 +1,4 @@
-import { MimeExplorerError } from './mime-explorer-error';
+import { MimeExplorerError } from './mime-explorer-error.js';
 
 /** Thrown by `register()` with `throwOnFailure`, grouping every failure. */
 export class RegistrationError extends MimeExplorerError {

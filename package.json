@@ -2,20 +2,18 @@
     "name": "mime-explorer",
     "version": "1.1.0",
     "description": "Look up MIME types, file extensions and metadata, and register your own mappings.",
-    "main": "dist/index.cjs",
-    "module": "dist/index.mjs",
+    "type": "module",
+    "main": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "default": "./dist/index.mjs"
         },
         "./db": {
             "types": "./dist/db.d.ts",
-            "import": "./dist/db.mjs",
-            "require": "./dist/db.cjs"
+            "default": "./dist/db.mjs"
         }
     },
     "files": [
@@ -24,12 +22,13 @@
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly",
         "build:js": "tsdown",
-        "build": "node bin/db.js && node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && npm run build:js",
+        "build": "node bin/db.cjs && node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && npm run build:js",
         "commit": "npx git-cz",
         "lint": "eslint src AGENTS.md CLAUDE.md .agents",
         "lint:fix": "npm run lint -- --fix",
         "test": "npm run test:types && cross-env NODE_ENV=test vitest run --config test/vitest.config.mts",
         "test:types": "tsc -p test/types/tsconfig.json",
+        "test:package": "tsc -p test/package/tsconfig.json && node test/package/esm.mjs && node test/package/cjs.cjs",
         "test:coverage": "npm test -- --coverage",
         "prepare": "husky",
         "prepublishOnly": "npm run build"
