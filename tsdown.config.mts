@@ -9,6 +9,6 @@ export default defineConfig({
     target: 'es2020',
     sourcemap: true,
     outExtensions: ({ format }) => ({ js: format === 'es' ? '.mjs' : '.cjs' }),
-    deps: { alwaysBundle: [/.*/], onlyBundle: false },
+    deps: { alwaysBundle: [/.*/], neverBundle: ['@ebec/core'], onlyBundle: false },
     minify: true,
 });

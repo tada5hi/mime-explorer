@@ -32,10 +32,10 @@ You need a MIME type for a filename, a default extension for a Content-Type head
 
 | Concern | Without it | With mime-explorer |
 |---|---|---|
-| File paths and extensions | Strip path segments and normalize extension case yourself | `getTypeByExtension()` accepts paths, extensions and dotted extensions |
-| Content-Type parameters | Remove parameters before searching the database | `getMetaByType()` and `getExtensionByType()` accept values such as `text/html; charset=utf8` |
-| Metadata | Maintain separate access to the underlying record | `getMetaByType()` returns extensions, source, charset and compressibility when present |
-| Custom formats | Keep your own mappings alongside the database | `defineType()`, `defineTypes()` and `undefineType()` modify an instance |
+| File paths and extensions | Strip path segments and normalize extension case yourself | `getType()` accepts paths, extensions and dotted extensions |
+| Content-Type parameters | Remove parameters before searching the database | `getMeta()` and `getExtension()` accept values such as `text/html; charset=utf8` |
+| Metadata | Maintain separate access to the underlying record | `getMeta()` returns extensions, source, charset and compressibility when present |
+| Custom formats | Keep your own mappings alongside the database | `register()` and `unregister()` modify an instance |
 
 ```typescript
 import { MimeExplorer } from 'mime-explorer';
@@ -43,19 +43,19 @@ import db from 'mime-explorer/db';
 
 const mime = new MimeExplorer(db);
 
-mime.getTypeByExtension('/uploads/report.JSON');         // 'application/json'
-mime.getExtensionByType('text/html; charset=utf8');      // 'html'
-mime.getMetaByType('application/json')?.charset;         // 'UTF-8'
+mime.getType('/uploads/report.JSON');              // 'application/json'
+mime.getExtension('text/html; charset=utf8');      // 'html'
+mime.getMeta('application/json')?.charset;         // 'UTF-8'
 ```
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/tada5hi/mime-explorer/master/.github/assets/lookup.svg" alt="getTypeByExtension uses the extension index. getMetaByType and getExtensionByType use the MIME metadata index. Each MimeExplorer instance has its own indexes." width="960" />
+    <img src="https://raw.githubusercontent.com/tada5hi/mime-explorer/master/.github/assets/lookup.svg" alt="getType uses the extension index. getMeta and getExtension use the MIME metadata index. Each MimeExplorer instance has its own indexes." width="960" />
 </p>
 
 <details>
 <summary>How the lookup indexes work</summary>
 
-Each `MimeExplorer` instance owns two indexes, initialized from the definitions passed to its constructor. The extension index maps a file extension to its MIME type; `getTypeByExtension()` searches it using the final path segment and suffix. The MIME metadata index maps a MIME type to its record; `getMetaByType()` returns that record, and `getExtensionByType()` returns its first extension. Unknown lookups return `undefined`.
+Each `MimeExplorer` instance owns two indexes, initialized from the definitions passed to its constructor. The extension index maps a file extension to its MIME type; `getType()` searches it using the final path segment and suffix. The MIME metadata index maps a MIME type to its record; `getMeta()` returns that record, and `getExtension()` returns its first extension. Unknown lookups return `undefined`.
 
 </details>
 
@@ -65,7 +65,7 @@ Each `MimeExplorer` instance owns two indexes, initialized from the definitions 
 npm install mime-explorer
 ```
 
-The package provides ESM and CommonJS entrypoints, TypeScript declarations, and no runtime dependencies or peer dependencies. It does not declare a Node.js runtime minimum. Contributor tools require Node 24.11 or newer within the 24.x line.
+The package provides ESM and CommonJS entrypoints and TypeScript declarations. Its one runtime dependency is [`@ebec/core`](https://github.com/tada5hi/ebec), the base of its error classes; it has no peer dependencies. It does not declare a Node.js runtime minimum. Contributor tools require Node 24.11 or newer within the 24.x line.
 
 ## Usage
 
@@ -85,7 +85,7 @@ const { MimeExplorer } = require('mime-explorer');
 const db = require('mime-explorer/db');
 
 const mime = new MimeExplorer(db);
-mime.getTypeByExtension('/uploads/report.JSON'); // 'application/json'
+mime.getType('/uploads/report.JSON'); // 'application/json'
 ```
 
 `new MimeExplorer()` creates an empty registry for custom mappings. Importing `mime-explorer` alone does not load the database or create a shared registry. The `mime-explorer/db` entrypoint provides a typed ESM default export and the database directly through CommonJS `require()`, without JSON import attributes.
@@ -93,31 +93,31 @@ mime.getTypeByExtension('/uploads/report.JSON'); // 'application/json'
 ### Find a MIME type
 
 ```typescript
-mime.getTypeByExtension('txt');                    // 'text/plain'
-mime.getTypeByExtension('json');                   // 'application/json'
-mime.getTypeByExtension('.JSON');                  // 'application/json'
-mime.getTypeByExtension('/uploads/report.json');   // 'application/json'
-mime.getTypeByExtension('C:\\uploads\\report.json'); // 'application/json'
-mime.getTypeByExtension('unknown-extension');      // undefined
+mime.getType('txt');                    // 'text/plain'
+mime.getType('json');                   // 'application/json'
+mime.getType('.JSON');                  // 'application/json'
+mime.getType('/uploads/report.json');   // 'application/json'
+mime.getType('C:\\uploads\\report.json'); // 'application/json'
+mime.getType('unknown-extension');      // undefined
 ```
 
-`getTypeByExtension()` uses the last path segment and its final extension, case-insensitively. Both `/` and `\` are path separators. A path whose final segment has no extension returns `undefined`; a bare extension such as `txt` is accepted. A dotfile in a path, such as `/uploads/.json`, is not treated as having an extension.
+`getType()` uses the last path segment and its final extension, case-insensitively. Both `/` and `\` are path separators. A path whose final segment has no extension returns `undefined`; a bare extension such as `txt` is accepted. A dotfile in a path, such as `/uploads/.json`, is not treated as having an extension.
 
 ### Find the default extension
 
 ```typescript
-mime.getExtensionByType('text/plain');                // 'txt'
-mime.getExtensionByType('application/json');          // 'json'
-mime.getExtensionByType('TEXT/HTML; charset=utf8');    // 'html'
-mime.getExtensionByType('application/x-unknown-demo'); // undefined
+mime.getExtension('text/plain');                // 'txt'
+mime.getExtension('application/json');          // 'json'
+mime.getExtension('TEXT/HTML; charset=utf8');    // 'html'
+mime.getExtension('application/x-unknown-demo'); // undefined
 ```
 
-`getExtensionByType()` returns the first extension in the MIME record, without a leading dot. It ignores leading whitespace and MIME parameters, and compares the type case-insensitively. A leading `*` on a registered default extension is removed from the returned value.
+`getExtension()` returns the first extension in the MIME record, without a leading dot. It ignores leading whitespace and MIME parameters, and compares the type case-insensitively.
 
 ### Read metadata
 
 ```typescript
-mime.getMetaByType('application/json');
+mime.getMeta('application/json');
 // {
 //   source: 'iana',
 //   charset: 'UTF-8',
@@ -125,11 +125,11 @@ mime.getMetaByType('application/json');
 //   extensions: ['json', 'map']
 // }
 
-mime.getMetaByType('application/json; charset=ISO-8859-1')?.charset; // 'UTF-8'
-mime.getMetaByType('application/x-unknown-demo');                   // undefined
+mime.getMeta('application/json; charset=ISO-8859-1')?.charset; // 'UTF-8'
+mime.getMeta('application/x-unknown-demo');                   // undefined
 ```
 
-`getMetaByType()` applies the same MIME normalization as `getExtensionByType()`. Returned metadata comes from the registry; a header's `charset` parameter does not override it. Records without extensions are not registered, even if the underlying database contains other metadata for them.
+`getMeta()` applies the same MIME normalization as `getExtension()`. Returned metadata comes from the registry; a header's `charset` parameter does not override it. Records without extensions are not registered, even if the underlying database contains other metadata for them.
 
 ## Custom mappings
 
@@ -138,71 +138,103 @@ import { MimeExplorer } from 'mime-explorer';
 
 const mime = new MimeExplorer();
 
-mime.defineType('application/x-project-note', ['pnote', 'pnt']);
-mime.getTypeByExtension('meeting.PNOTE');                   // 'application/x-project-note'
-mime.getExtensionByType('application/x-project-note');      // 'pnote'
-
-mime.defineTypes({
+mime.register({
+    'application/x-project-note': ['pnote', 'pnt'],
     'text/x-project-log': {
         extensions: ['plog'],
         charset: 'UTF-8',
         compressible: true,
     },
 });
-mime.getMetaByType('text/x-project-log')?.compressible; // true
+mime.getType('meeting.PNOTE');                   // 'application/x-project-note'
+mime.getExtension('application/x-project-note'); // 'pnote'
+mime.getMeta('text/x-project-log')?.compressible; // true
 
-mime.undefineType('application/x-project-note');
-mime.undefineType('text/x-project-log');
-mime.getTypeByExtension('pnote'); // undefined
+mime.unregister('application/x-project-note');   // true
+mime.getType('pnote');                           // undefined
 ```
 
-- Pass extensions without a leading dot. `defineType()` lowercases MIME keys and extensions; use bare MIME keys without parameters.
-- An extension list must be nonempty. Missing, `undefined` or empty `extensions` make the definition a no-op.
-- The first definition of a MIME record wins. Each extension mapping is also first-wins, independently. Calling `defineType()` again can register new extensions without replacing the MIME record or its metadata.
-- To replace a MIME record, remove it with `undefineType()` before defining it again. Existing extension owners still win; removal does not restore an earlier owner.
-- `undefineType()` takes a bare MIME key case-insensitively, without parameters. It removes the record and every extension currently pointing to that key. Unknown keys are a no-op.
+- MIME keys and extensions follow the same rules as lookups, so anything registered can be found again. Keys may be Content-Type values, and extensions may have one leading dot.
+- The first definition of a MIME record wins, and each extension has one owner: the first type that declared it. Registering a known type again can add extensions but cannot change its metadata.
+- To replace a MIME record, call `unregister()` before registering it again. Removal does not restore an earlier owner of its extensions.
+- `unregister()` removes the record and every extension it owns, and returns whether a record was removed.
 - Each instance owns its registry. Definitions are not shared with other instances or saved to disk.
+
+### Handling failures
+
+By default `register()` applies everything it can and returns `true` when all of it was applied, `false` otherwise.
+
+```typescript
+const mime = new MimeExplorer(db);
+
+mime.register({ 'application/x-mine': ['json', 'mine'] }); // false: 'json' is owned by 'application/json'
+mime.getType('mine');                                      // 'application/x-mine'
+```
+
+With `throwOnFailure`, it applies nothing and throws a `RegistrationError`, whose `errors` property lists every problem:
+
+```typescript
+import { RegistrationError } from 'mime-explorer';
+
+try {
+    mime.register(definitions, { throwOnFailure: true });
+} catch (error) {
+    if (error instanceof RegistrationError) {
+        console.error(error.errors);
+    }
+}
+```
+
+| Error | Raised when | Extra properties |
+|---|---|---|
+| `InvalidTypeError` | A key has no MIME type | `type` |
+| `MissingExtensionsError` | A definition has no extensions | `type` |
+| `InvalidExtensionError` | An extension is not a string, is empty, starts with `*`, or contains whitespace, `.`, `/` or `\` after its leading dot | `type`, `extension` |
+| `ExtensionConflictError` | An extension belongs to another MIME type. Without `throwOnFailure` the record still lists it and it can be the default extension; `getType()` keeps returning the owner | `type`, `extension`, `owner` |
+| `MetadataConflictError` | A registered type is given different metadata | `type` |
+
+All of them extend `MimeExplorerError`, which extends `BaseError` from `@ebec/core`. The constructor never throws, because bundled data contains records without extensions and contested extensions; it keeps the first definition and skips unusable entries.
 
 ### Metadata fields
 
-`defineType()` accepts an extension array or a `TypeMetaInput` object. `defineTypes()` and the constructor accept a `TypeMetaCollection` with the same definition shapes.
+`register()` and the constructor accept a `TypeMetaCollection`: each MIME key maps to an extension array or a `TypeMetaInput` object.
 
 | Field | Type | Behavior |
 |---|---|---|
-| `extensions` | `string[]` | Required by `TypeMeta`; the first extension is the default. Definitions without extensions are ignored |
+| `extensions` | `readonly string[]` | Required by `TypeMeta`; the first extension is the default |
 | `source` | `string` | Optional origin, for example `iana`, `apache` or `nginx` |
 | `charset` | `string` | Optional charset recorded for the MIME type |
 | `compressible` | `boolean` | Optional compressibility information; absence does not mean `false` |
 
 ## API
 
-The package root exports the class and types below. Lookup and registration methods belong to `MimeExplorer` instances; there are no standalone function helpers.
+The package root exports the classes and types below. Lookup and registration methods belong to `MimeExplorer` instances; there are no standalone function helpers. The error classes are listed under [Handling failures](#handling-failures).
 
 | Export | Purpose |
 |---|---|
 | `MimeExplorer` | Registry class; `new MimeExplorer(collection?)` creates an independent registry, empty by default |
 | `IMimeExplorer` | Interface for the registry methods |
-| `TypeMeta` | Metadata with required `extensions` and optional `source`, `charset`, `compressible` |
-| `TypeMetaInput` | `Partial<TypeMeta>` accepted by registration methods |
-| `TypeMetaCollection` | `Record<string, string[] \| TypeMetaInput>` accepted by the constructor and `defineTypes()` |
+| `TypeMeta` | Read-only metadata with required `extensions` and optional `source`, `charset`, `compressible` |
+| `TypeMetaInput` | `Partial<TypeMeta>` accepted in definitions |
+| `TypeMetaCollection` | `Readonly<Record<string, readonly string[] \| TypeMetaInput>>` accepted by the constructor and `register()` |
 | `TypeMap` | Compatibility alias for `TypeMetaCollection` |
+| `RegisterOptions` | Options for `register()`: `throwOnFailure` (default `false`) |
 
 Import the bundled database as the default export from `mime-explorer/db`.
 
-| Method | Signature | Purpose |
+| Method | Input | Returns |
 |---|---|---|
-| `getTypeByExtension` | `(extensionOrPath: string) => string \| undefined` | MIME type from an extension, filename or path |
-| `getExtensionByType` | `(mimeType: string) => string \| undefined` | Default extension from a MIME type or Content-Type header |
-| `getMetaByType` | `(mimeType: string) => TypeMeta \| undefined` | Metadata from a MIME type or Content-Type header |
-| `defineType` | `(mimeType: string, value: string[] \| TypeMetaInput) => void` | Register one MIME type and its extensions/metadata |
-| `defineTypes` | `(items: TypeMetaCollection) => void` | Register definitions keyed by MIME type |
-| `undefineType` | `(mimeType: string) => void` | Remove a MIME record and its owned extensions |
+| `getType(path)` | `string`: extension, dotted extension, file name or path | MIME type, or `undefined` when unknown |
+| `getExtension(contentType)` | `string`: MIME type or Content-Type header | Default extension without a dot, or `undefined` when unknown |
+| `getMeta(contentType)` | `string`: MIME type or Content-Type header | Read-only `TypeMeta`, or `undefined` when unknown |
+| `register(definitions, options?)` | `TypeMetaCollection` and optional `RegisterOptions` | `true` when everything was applied, otherwise `false` |
+| `unregister(contentType)` | `string`: MIME type or Content-Type header | `true` when a record was removed, otherwise `false` |
 
 ## Notes
 
 - **Extension lookup only.** The library does not inspect file contents, check that a file exists, or validate uploads. URL query strings and fragments are not stripped; pass a pathname or extension.
 - **No fallback type.** Unknown inputs return `undefined`. Choose an application fallback such as `application/octet-stream` if needed.
-- **Live metadata.** `getMetaByType()` returns the stored object. Treat it as read-only: modifying it changes future metadata reads without rebuilding the extension index.
+- **Read-only metadata.** `getMeta()` returns a frozen record. Later registrations do not change a record you already hold.
 - **Optional bundled data.** `mime-explorer/db` contains data from [mime-db](https://github.com/jshttp/mime-db). Pass it to the constructor to initialize both indexes. There are no network requests during lookups. Database updates can change mappings and default extensions.
 
 ## Contributing
