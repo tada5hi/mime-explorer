@@ -1,8 +1,8 @@
-import { MimeExplorer, MimeExplorerError } from '../../src';
+import { MimeExplorer, MimeExplorerError } from '../../src/index.js';
 import type {
     IMimeExplorer, TypeMap, TypeMeta, TypeMetaCollection,
-} from '../../src';
-import db from '../../src/db';
+} from '../../src/index.js';
+import db from '../../src/db.js';
 
 const definitions = {
     'text/x-note': { extensions: ['note'], charset: 'UTF-8' },
