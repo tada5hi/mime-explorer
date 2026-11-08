@@ -18,7 +18,7 @@ Deepening candidates for the next major release. Breaking changes are allowed. G
 | `getType(path)` | Extension, dotted extension, file name or path | MIME type or `undefined` |
 | `getExtension(contentType)` | MIME type or Content-Type header | Default extension or `undefined` |
 | `getMeta(contentType)` | MIME type or Content-Type header | Read-only record or `undefined` |
-| `register(definitions, options?)` | Definitions and `{ throwOnFailure }` | Errors for parts not applied |
+| `register(definitions, options?)` | Definitions and `{ throwOnFailure }` | `true` when everything was applied |
 | `unregister(contentType)` | MIME type or Content-Type header | `true` when a record was removed |
 
 ## 1. Seal the registry
@@ -37,7 +37,7 @@ Deepening candidates for the next major release. Breaking changes are allowed. G
 ## 3. Public interface
 
 - Lookups name their result and parameters name their input. Doc comments state accepted input and return value.
-- `register` is the only registration method. By default it applies what it can and returns one error per failure.
+- `register` is the only registration method. By default it applies what it can and returns whether everything was applied.
 - A contested extension reports `ExtensionConflictError` and stays listed on its record, matching the constructor; `getType` keeps returning the first owner.
 - With `throwOnFailure`, `register` applies nothing and throws `RegistrationError`, grouping every failure in `errors`.
 - Errors extend `MimeExplorerError`, which extends `BaseError` from `@ebec/core`: `InvalidTypeError`, `MissingExtensionsError`, `InvalidExtensionError`, `ExtensionConflictError`, `MetadataConflictError`.

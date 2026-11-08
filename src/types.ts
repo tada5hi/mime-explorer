@@ -1,5 +1,3 @@
-import type { MimeExplorerError } from './errors';
-
 export type TypeMeta = {
     /**
      * Source of the mime type and associated information.
@@ -40,10 +38,10 @@ export interface IMimeExplorer {
      *
      * @param definitions - Extensions or metadata per MIME type, such as `{ 'text/plain': ['txt'] }`.
      * @param options - Set `throwOnFailure` to apply nothing and throw `RegistrationError` on any failure.
-     * @returns One error per problem; empty when everything was applied. A contested extension
-     * stays listed on its record, but `getType()` keeps returning its first owner.
+     * @returns `true` when everything was applied, `false` when any part could not be. A contested
+     * extension stays listed on its record, but `getType()` keeps returning its first owner.
      */
-    register(definitions: TypeMetaCollection, options?: RegisterOptions) : readonly MimeExplorerError[];
+    register(definitions: TypeMetaCollection, options?: RegisterOptions) : boolean;
 
     /**
      * Remove a MIME type and every extension it owns.

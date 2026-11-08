@@ -34,23 +34,23 @@ export class MimeExplorer implements IMimeExplorer {
         applyDefinitions(definitions, this.#records, this.#owners);
     }
 
-    register(definitions: TypeMetaCollection, options: RegisterOptions = {}): readonly MimeExplorerError[] {
+    register(definitions: TypeMetaCollection, options: RegisterOptions = {}): boolean {
         if (!options.throwOnFailure) {
-            return applyDefinitions(definitions, this.#records, this.#owners).map((createError) => createError());
+            return applyDefinitions(definitions, this.#records, this.#owners).length === 0;
         }
 
         const records = new Map(this.#records);
         const owners = new Map(this.#owners);
-        const errors = applyDefinitions(definitions, records, owners).map((createError) => createError());
+        const failures = applyDefinitions(definitions, records, owners);
 
-        if (errors.length > 0) {
-            throw new RegistrationError(errors);
+        if (failures.length > 0) {
+            throw new RegistrationError(failures.map((createError) => createError()));
         }
 
         this.#records = records;
         this.#owners = owners;
 
-        return errors;
+        return true;
     }
 
     unregister(contentType: string): boolean {

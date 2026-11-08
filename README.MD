@@ -162,16 +162,16 @@ mime.getType('pnote');                           // undefined
 
 ### Handling failures
 
-By default `register()` applies everything it can and returns one error for each part it could not apply. An empty array means everything was applied.
+By default `register()` applies everything it can and returns `true` when all of it was applied, `false` otherwise.
 
 ```typescript
 const mime = new MimeExplorer(db);
 
-const errors = mime.register({ 'application/x-mine': ['json', 'mine'] });
-// [ExtensionConflictError: 'json' of 'application/x-mine' is owned by 'application/json'.]
+mime.register({ 'application/x-mine': ['json', 'mine'] }); // false: 'json' is owned by 'application/json'
+mime.getType('mine');                                      // 'application/x-mine'
 ```
 
-With `throwOnFailure`, it applies nothing and throws a `RegistrationError`, whose `errors` property holds the same list:
+With `throwOnFailure`, it applies nothing and throws a `RegistrationError`, whose `errors` property lists every problem:
 
 ```typescript
 import { RegistrationError } from 'mime-explorer';
@@ -227,7 +227,7 @@ Import the bundled database as the default export from `mime-explorer/db`.
 | `getType(path)` | `string`: extension, dotted extension, file name or path | MIME type, or `undefined` when unknown |
 | `getExtension(contentType)` | `string`: MIME type or Content-Type header | Default extension without a dot, or `undefined` when unknown |
 | `getMeta(contentType)` | `string`: MIME type or Content-Type header | Read-only `TypeMeta`, or `undefined` when unknown |
-| `register(definitions, options?)` | `TypeMetaCollection` and optional `RegisterOptions` | `readonly MimeExplorerError[]`, empty when everything was applied |
+| `register(definitions, options?)` | `TypeMetaCollection` and optional `RegisterOptions` | `true` when everything was applied, otherwise `false` |
 | `unregister(contentType)` | `string`: MIME type or Content-Type header | `true` when a record was removed, otherwise `false` |
 
 ## Notes

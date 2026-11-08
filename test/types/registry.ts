@@ -21,9 +21,8 @@ mime.register(definitions);
 new MimeExplorer(legacyCollection);
 new MimeExplorer(db);
 
-const errors = mime.register(definitions, { throwOnFailure: true }) satisfies readonly MimeExplorerError[];
-// @ts-expect-error The returned error list is readonly.
-errors.push(errors[0] as MimeExplorerError);
+mime.register(definitions) satisfies boolean;
+mime.register(definitions, { throwOnFailure: true }) satisfies boolean;
 // @ts-expect-error The base error class is abstract.
 new MimeExplorerError();
 mime.unregister('text/x-note') satisfies boolean;

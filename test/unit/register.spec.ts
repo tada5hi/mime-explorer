@@ -14,6 +14,16 @@ import {
 import type { TypeMetaCollection } from '../../src';
 import db from '../../src/db';
 
+function failuresOf(mime: MimeExplorer, definitions: TypeMetaCollection): readonly MimeExplorerError[] {
+    try {
+        mime.register(definitions, { throwOnFailure: true });
+    } catch (error) {
+        return (error as RegistrationError).errors;
+    }
+
+    return [];
+}
+
 describe('register() failures', () => {
     const seed = { 'text/plain': { extensions: ['txt'], charset: 'UTF-8' } };
 
@@ -28,8 +38,9 @@ describe('register() failures', () => {
         ['owned extension', { 'x/a': ['TXT'] }, ExtensionConflictError, 'EXTENSION_CONFLICT_ERROR', { type: 'x/a', extension: 'txt', owner: 'text/plain' }],
         ['different metadata', { 'TEXT/PLAIN': { extensions: ['txt'], charset: 'ASCII' } }, MetadataConflictError, 'METADATA_CONFLICT_ERROR', { type: 'text/plain' }],
     ])('returns a typed error for %s', (_label, definitions, errorClass, code, fields) => {
-        const errors = new MimeExplorer(seed).register(definitions);
+        const errors = failuresOf(new MimeExplorer(seed), definitions);
 
+        expect(new MimeExplorer(seed).register(definitions)).toBe(false);
         expect(errors).toHaveLength(1);
         expect(errors[0]).toBeInstanceOf(errorClass);
         expect(errors[0]).toBeInstanceOf(MimeExplorerError);
@@ -40,7 +51,7 @@ describe('register() failures', () => {
     it('applies everything it can by default', () => {
         const mime = new MimeExplorer({ 'text/plain': ['txt'] });
 
-        mime.register({ 'x/note': ['txt', 'note'], 'x/other': ['other'] });
+        expect(mime.register({ 'x/note': ['txt', 'note'], 'x/other': ['other'] })).toBe(false);
 
         expect(mime.getType('txt')).toBe('text/plain');
         expect(mime.getType('note')).toBe('x/note');
@@ -56,37 +67,29 @@ describe('register() failures', () => {
         expect(mime.getMeta('text/plain')).toEqual({ extensions: ['txt', 'text'], charset: 'UTF-8' });
     });
 
-    it('returns no errors when everything applies or repeats', () => {
+    it('returns true when everything applies or repeats', () => {
         const mime = new MimeExplorer(seed);
 
-        expect(mime.register({ 'x/a': ['aaa'] })).toEqual([]);
-        expect(mime.register({ 'x/a': ['aaa', 'alias'] })).toEqual([]);
-        expect(mime.register({ 'text/plain': { extensions: ['txt'], charset: 'UTF-8' } })).toEqual([]);
-        expect(mime.register({ 'text/plain': { extensions: ['txt'], charset: undefined } })).toEqual([]);
+        expect(mime.register({ 'x/a': ['aaa'] })).toBe(true);
+        expect(mime.register({ 'x/a': ['aaa', 'alias'] })).toBe(true);
+        expect(mime.register({ 'text/plain': { extensions: ['txt'], charset: 'UTF-8' } })).toBe(true);
+        expect(mime.register({ 'text/plain': { extensions: ['txt'], charset: undefined } })).toBe(true);
     });
 
     it.each([
         ['invalid extensions', { extensions: ['*bad'], charset: 'ASCII' }, InvalidExtensionError],
         ['no extensions', { charset: 'ASCII' }, MissingExtensionsError],
     ])('reports a metadata conflict alongside %s', (_label, definition, errorClass) => {
-        const errors = new MimeExplorer(seed).register({ 'text/plain': definition });
+        const errors = failuresOf(new MimeExplorer(seed), { 'text/plain': definition });
 
+        expect(new MimeExplorer(seed).register({ 'text/plain': definition })).toBe(false);
         expect(errors).toHaveLength(2);
         expect(errors.some((error) => error instanceof MetadataConflictError)).toBe(true);
         expect(errors.some((error) => error instanceof errorClass)).toBe(true);
-
-        let thrown: unknown;
-        try {
-            new MimeExplorer(seed).register({ 'text/plain': definition }, { throwOnFailure: true });
-        } catch (error) {
-            thrown = error;
-        }
-
-        expect((thrown as RegistrationError).errors).toHaveLength(2);
     });
 
     it('detects conflicts inside one batch', () => {
-        const errors = new MimeExplorer().register({ 'x/a': ['same'], 'x/b': ['same'] });
+        const errors = failuresOf(new MimeExplorer(), { 'x/a': ['same'], 'x/b': ['same'] });
 
         expect(errors).toHaveLength(1);
         expect(errors[0]).toMatchObject({ type: 'x/b', extension: 'same', owner: 'x/a' });
@@ -128,7 +131,7 @@ describe('register() with throwOnFailure', () => {
     it('registers normally when nothing fails', () => {
         const mime = new MimeExplorer();
 
-        expect(mime.register({ 'x/a': ['aaa'] }, { throwOnFailure: true })).toEqual([]);
+        expect(mime.register({ 'x/a': ['aaa'] }, { throwOnFailure: true })).toBe(true);
         expect(mime.getType('aaa')).toBe('x/a');
     });
 });
@@ -140,14 +143,16 @@ describe('malformed input from untyped callers', () => {
         const definitions = { 'x/a': value } as unknown as TypeMetaCollection;
 
         expect(new MimeExplorer(definitions).getMeta('x/a')).toBeUndefined();
-        expect(new MimeExplorer().register(definitions)[0]).toBeInstanceOf(MissingExtensionsError);
+        expect(new MimeExplorer().register(definitions)).toBe(false);
+        expect(failuresOf(new MimeExplorer(), definitions)[0]).toBeInstanceOf(MissingExtensionsError);
     });
 
     it('reports non-string extensions and applies the rest', () => {
         const definitions = { 'x/a': [1, null, 'good'] } as unknown as TypeMetaCollection;
         const mime = new MimeExplorer();
-        const errors = mime.register(definitions);
+        const errors = failuresOf(new MimeExplorer(), definitions);
 
+        expect(mime.register(definitions)).toBe(false);
         expect(errors).toHaveLength(2);
         expect(errors[0]).toBeInstanceOf(InvalidExtensionError);
         expect(errors[0]).toMatchObject({ extension: '1' });
@@ -157,8 +162,9 @@ describe('malformed input from untyped callers', () => {
     it('reports an extension that cannot be converted to a string', () => {
         const definitions = JSON.parse('{ "x/a": [{ "toString": null }, "good"] }') as TypeMetaCollection;
         const mime = new MimeExplorer();
-        const errors = mime.register(definitions);
+        const errors = failuresOf(new MimeExplorer(), definitions);
 
+        expect(mime.register(definitions)).toBe(false);
         expect(errors).toHaveLength(1);
         expect(errors[0]).toBeInstanceOf(InvalidExtensionError);
         expect(errors[0]).toMatchObject({ extension: '[object Object]' });
@@ -169,7 +175,7 @@ describe('malformed input from untyped callers', () => {
         const definitions = JSON.parse('null') as TypeMetaCollection;
 
         expect(() => new MimeExplorer(definitions)).not.toThrow();
-        expect(new MimeExplorer().register(definitions)).toEqual([]);
+        expect(new MimeExplorer().register(definitions)).toBe(true);
     });
 
     it.each([[undefined], [null], [1]])('finds nothing for the input %j', (input) => {
