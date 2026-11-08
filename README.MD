@@ -235,7 +235,7 @@ Import the bundled database as the default export from `mime-explorer/db`.
 - **Extension lookup only.** The library does not inspect file contents, check that a file exists, or validate uploads. URL query strings and fragments are not stripped; pass a pathname or extension.
 - **No fallback type.** Unknown inputs return `undefined`. Choose an application fallback such as `application/octet-stream` if needed.
 - **Read-only metadata.** `getMeta()` returns a frozen record. Later registrations do not change a record you already hold.
-- **Optional bundled data.** `mime-explorer/db` contains data from [mime-db](https://github.com/jshttp/mime-db). Pass it to the constructor to initialize both indexes. There are no network requests during lookups. Database updates can change mappings and default extensions.
+- **Optional bundled data.** `mime-explorer/db` contains data from [mime-db](https://github.com/jshttp/mime-db). Pass it to the constructor to initialize both indexes. There are no network requests during lookups. When several types declare an extension, the database lists the preferred type first: it ranks standard subtypes above vendor subtypes and those above experimental ones, then by source with IANA first, then `video`, `font` and `audio` above `application` above other media, then the shorter name. Database updates can change mappings and default extensions.
 
 ## Contributing
 
