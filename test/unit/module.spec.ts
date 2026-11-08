@@ -75,10 +75,16 @@ it('accepts explicitly undefined extensions in a partial type map', () => {
 });
 
 it.each([
-    ['js', 'application/javascript'],
-    ['mp4', 'application/mp4'],
+    ['js', 'text/javascript'],
+    ['mp4', 'video/mp4'],
+    ['mp3', 'audio/mpeg'],
+    ['zip', 'application/zip'],
+    ['xlf', 'application/xliff+xml'],
+    ['rtf', 'application/rtf'],
+    ['rar', 'application/vnd.rar'],
+    ['ico', 'image/vnd.microsoft.icon'],
     ['exe', 'application/octet-stream'],
-])('preserves the first bundled mapping for %s', (extension, type) => {
+])('resolves the preferred bundled mapping for %s', (extension, type) => {
     expect(new MimeExplorer(db).getType(extension)).toBe(type);
 });
 
