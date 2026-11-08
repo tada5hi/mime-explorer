@@ -11,7 +11,7 @@ import {
     MissingExtensionsError,
     RegistrationError,
 } from '../../src';
-import type { TypeMetaCollection } from '../../src';
+import type { TypeMeta, TypeMetaCollection, TypeMetaInput } from '../../src';
 import db from '../../src/db';
 
 function failuresOf(mime: MimeExplorer, definitions: TypeMetaCollection): readonly MimeExplorerError[] {
@@ -30,7 +30,7 @@ describe('register() failures', () => {
     it.each([
         ['invalid MIME key', { ' ; a=b': ['ext'] }, InvalidTypeError, 'INVALID_TYPE_ERROR', { type: ' ; a=b' }],
         ['no extensions', { 'x/a': [] }, MissingExtensionsError, 'MISSING_EXTENSIONS_ERROR', { type: 'x/a' }],
-        ['undefined extensions', { 'x/a': { charset: 'UTF-8' } }, MissingExtensionsError, 'MISSING_EXTENSIONS_ERROR', { type: 'x/a' }],
+        ['undefined extensions', { 'x/a': { extensions: undefined } }, MissingExtensionsError, 'MISSING_EXTENSIONS_ERROR', { type: 'x/a' }],
         ['invalid extension', { 'x/a': ['*bad'] }, InvalidExtensionError, 'INVALID_EXTENSION_ERROR', { type: 'x/a', extension: '*bad' }],
         ['multi-part extension', { 'x/a': ['tar.gz'] }, InvalidExtensionError, 'INVALID_EXTENSION_ERROR', { type: 'x/a', extension: 'tar.gz' }],
         ['marker after the leading dot', { 'x/a': ['.*bad'] }, InvalidExtensionError, 'INVALID_EXTENSION_ERROR', { type: 'x/a', extension: '.*bad' }],
@@ -78,7 +78,7 @@ describe('register() failures', () => {
 
     it.each([
         ['invalid extensions', { extensions: ['*bad'], charset: 'ASCII' }, InvalidExtensionError],
-        ['no extensions', { charset: 'ASCII' }, MissingExtensionsError],
+        ['malformed extensions', { extensions: 'txt', charset: 'ASCII' } as unknown as TypeMetaInput, MissingExtensionsError],
     ])('reports a metadata conflict alongside %s', (_label, definition, errorClass) => {
         const errors = failuresOf(new MimeExplorer(seed), { 'text/plain': definition });
 
@@ -138,7 +138,22 @@ describe('register() with throwOnFailure', () => {
 
 describe('malformed input from untyped callers', () => {
     it.each([
-        [null], [undefined], [1], ['txt'], [{ extensions: 'txt' }],
+        [null],
+        [undefined],
+        [1],
+        ['txt'],
+        [{ extensions: 'txt' }],
+        [{ extensions: 'txt', charset: 'UTF-8' }],
+        [{ extensions: null, charset: 'UTF-8' }],
+        [{}],
+        [{ extension: ['txt'] }],
+        [{ extension: ['txt'], charset: 'UTF-8' }],
+        [{ charset: undefined }],
+        [{ charset: null }],
+        [{ charset: 1 }],
+        [{ source: 1 }],
+        [{ compressible: 'yes' }],
+        [Object.create({ charset: 'UTF-8' })],
     ])('reports a definition of %j as having no extensions', (value) => {
         const definitions = { 'x/a': value } as unknown as TypeMetaCollection;
 
@@ -186,6 +201,114 @@ describe('malformed input from untyped callers', () => {
         expect(mime.getExtension(value)).toBeUndefined();
         expect(mime.getType(value)).toBeUndefined();
         expect(mime.unregister(value)).toBe(false);
+    });
+});
+
+describe('metadata-only definitions', () => {
+    it.each([
+        ['absent extensions', { charset: 'UTF-8' }],
+        ['undefined extensions', { extensions: undefined, compressible: false }],
+        ['empty extensions', { extensions: [], source: 'iana' }],
+    ])('registers a record for %s', (_label, definition) => {
+        const mime = new MimeExplorer();
+
+        expect(mime.register({ 'X/A; a=b': definition })).toBe(true);
+        expect(mime.getMeta('x/a')).toEqual({ ...definition, extensions: [] });
+        expect(mime.getExtension('x/a')).toBeUndefined();
+    });
+
+    it.each([
+        ['an empty charset', { charset: '' }],
+        ['a false compressible', { compressible: false }],
+        ['an undefined sibling field', { charset: 'UTF-8', source: undefined }],
+    ])('treats %s as metadata', (_label, definition) => {
+        expect(new MimeExplorer({ 'x/a': definition }).getMeta('x/a')).toEqual({ ...definition, extensions: [] });
+    });
+
+    it('freezes the record and its empty extensions', () => {
+        const record = new MimeExplorer({ 'x/a': { charset: 'UTF-8' } }).getMeta('x/a') as TypeMeta;
+
+        expect(Object.isFrozen(record)).toBe(true);
+        expect(Object.isFrozen(record.extensions)).toBe(true);
+    });
+
+    it('keeps the first metadata-only record and reports a conflict', () => {
+        const mime = new MimeExplorer({ 'x/a': { charset: 'UTF-8' } });
+        const errors = failuresOf(mime, { 'x/a': { source: 'iana' } });
+
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toBeInstanceOf(MetadataConflictError);
+        expect(mime.register({ 'x/a': { source: 'iana' } })).toBe(false);
+        expect(mime.getMeta('x/a')).toEqual({ charset: 'UTF-8', extensions: [] });
+    });
+
+    it('removes a metadata-only record', () => {
+        const mime = new MimeExplorer({ 'x/a': { charset: 'UTF-8' } });
+
+        expect(mime.unregister('x/a')).toBe(true);
+        expect(mime.getMeta('x/a')).toBeUndefined();
+    });
+
+    it('names the missing definition in its error', () => {
+        expect(failuresOf(new MimeExplorer(), { 'x/a': [] })[0]?.message).toBe("'x/a' has no usable extensions or metadata.");
+    });
+
+    it('never resolves an extension to the record', () => {
+        const mime = new MimeExplorer({ 'x/a': { charset: 'UTF-8' } });
+
+        expect(mime.getType('a')).toBeUndefined();
+        expect(mime.getType('')).toBeUndefined();
+    });
+
+    it('accepts its own record back unchanged', () => {
+        const mime = new MimeExplorer({ 'x/a': { charset: 'UTF-8' } });
+
+        expect(mime.register({ 'x/a': mime.getMeta('x/a') as TypeMetaInput }, { throwOnFailure: true })).toBe(true);
+        expect(new MimeExplorer({ 'x/a': mime.getMeta('x/a') as TypeMetaInput }).getMeta('x/a')).toEqual(mime.getMeta('x/a'));
+    });
+
+    it('reports only the conflict when a known type gets different metadata', () => {
+        const mime = new MimeExplorer({ 'x/a': { extensions: ['a'], charset: 'UTF-8' } });
+        const errors = failuresOf(mime, { 'x/a': { charset: 'ASCII' } });
+
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toBeInstanceOf(MetadataConflictError);
+        expect(mime.register({ 'x/a': { charset: 'ASCII' } })).toBe(false);
+        expect(mime.getMeta('x/a')).toEqual({ extensions: ['a'], charset: 'UTF-8' });
+    });
+
+    it('keeps a known record when its metadata is repeated without extensions', () => {
+        const mime = new MimeExplorer({ 'x/a': { extensions: ['a'], charset: 'UTF-8' } });
+
+        expect(mime.register({ 'x/a': { charset: 'UTF-8' } }, { throwOnFailure: true })).toBe(true);
+        expect(mime.getMeta('x/a')).toEqual({ extensions: ['a'], charset: 'UTF-8' });
+        expect(mime.getType('a')).toBe('x/a');
+    });
+
+    it('lets extensions be added later and removes the record as usual', () => {
+        const mime = new MimeExplorer({ 'x/a': { charset: 'UTF-8' } });
+
+        expect(mime.register({ 'x/a': ['a', 'b'] })).toBe(true);
+        expect(mime.getMeta('x/a')).toEqual({ extensions: ['a', 'b'], charset: 'UTF-8' });
+        expect(mime.getExtension('x/a')).toBe('a');
+        expect(mime.getType('b')).toBe('x/a');
+        expect(mime.unregister('x/a')).toBe(true);
+        expect(mime.getType('a')).toBeUndefined();
+        expect(mime.getMeta('x/a')).toBeUndefined();
+    });
+
+    it('does not let an all-invalid extension list become a metadata-only record', () => {
+        const mime = new MimeExplorer();
+
+        expect(mime.register({ 'x/a': { extensions: ['*bad'], charset: 'UTF-8' } })).toBe(false);
+        expect(mime.getMeta('x/a')).toBeUndefined();
+    });
+
+    it('exposes bundled types that only carry metadata', () => {
+        const mime = new MimeExplorer(db);
+
+        expect(mime.getMeta('application/vnd.api+json')).toEqual({ source: 'iana', compressible: true, extensions: [] });
+        expect(mime.getExtension('application/vnd.api+json')).toBeUndefined();
     });
 });
 

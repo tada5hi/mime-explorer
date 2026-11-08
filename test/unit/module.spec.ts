@@ -222,10 +222,10 @@ it('starts empty and keeps instances independent', () => {
     expect(second.getType('json')).toBeUndefined();
 });
 
-it('normalizes MIME headers and ignores definitions without extensions', () => {
+it('normalizes MIME headers and ignores definitions with neither extensions nor metadata', () => {
     const mime = new MimeExplorer({ 'text/x-custom': { extensions: ['custom'], charset: 'UTF-8' } });
     mime.register({
-        'application/x-missing': { charset: 'UTF-8' },
+        'application/x-missing': { extensions: undefined },
         'application/x-empty': [],
     });
 

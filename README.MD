@@ -129,7 +129,7 @@ mime.getMeta('application/json; charset=ISO-8859-1')?.charset; // 'UTF-8'
 mime.getMeta('application/x-unknown-demo');                   // undefined
 ```
 
-`getMeta()` applies the same MIME normalization as `getExtension()`. Returned metadata comes from the registry; a header's `charset` parameter does not override it. Records without extensions are not registered, even if the underlying database contains other metadata for them.
+`getMeta()` applies the same MIME normalization as `getExtension()`. Returned metadata comes from the registry; a header's `charset` parameter does not override it. A type with metadata but no extensions, such as `application/vnd.api+json`, has a record with empty `extensions`; `getExtension()` returns `undefined` for it and `getType()` never resolves to it.
 
 ## Custom mappings
 
@@ -188,12 +188,12 @@ try {
 | Error | Raised when | Extra properties |
 |---|---|---|
 | `InvalidTypeError` | A key has no MIME type | `type` |
-| `MissingExtensionsError` | A definition has no extensions | `type` |
+| `MissingExtensionsError` | A definition has no usable extensions or metadata | `type` |
 | `InvalidExtensionError` | An extension is not a string, is empty, starts with `*`, or contains whitespace, `.`, `/` or `\` after its leading dot | `type`, `extension` |
 | `ExtensionConflictError` | An extension belongs to another MIME type. Without `throwOnFailure` the record still lists it and it can be the default extension; `getType()` keeps returning the owner | `type`, `extension`, `owner` |
 | `MetadataConflictError` | A registered type is given different metadata | `type` |
 
-All of them extend `MimeExplorerError`, which extends `BaseError` from `@ebec/core`. The constructor never throws, because bundled data contains records without extensions and contested extensions; it keeps the first definition and skips unusable entries.
+All of them extend `MimeExplorerError`, which extends `BaseError` from `@ebec/core`. The constructor never throws, because bundled data contains entries with neither extensions nor metadata and contested extensions; it keeps the first definition and skips unusable entries.
 
 ### Metadata fields
 
@@ -201,7 +201,7 @@ All of them extend `MimeExplorerError`, which extends `BaseError` from `@ebec/co
 
 | Field | Type | Behavior |
 |---|---|---|
-| `extensions` | `readonly string[]` | Required by `TypeMeta`; the first extension is the default |
+| `extensions` | `readonly string[]` | Required by `TypeMeta`; the first extension is the default. Empty for a type known only by its metadata; a `TypeMetaInput` may omit it when it sets only `source`, `charset` or `compressible` |
 | `source` | `string` | Optional origin, for example `iana`, `apache` or `nginx` |
 | `charset` | `string` | Optional charset recorded for the MIME type |
 | `compressible` | `boolean` | Optional compressibility information; absence does not mean `false` |
@@ -225,7 +225,7 @@ Import the bundled database as the default export from `mime-explorer/db`.
 | Method | Input | Returns |
 |---|---|---|
 | `getType(path)` | `string`: extension, dotted extension, file name or path | MIME type, or `undefined` when unknown |
-| `getExtension(contentType)` | `string`: MIME type or Content-Type header | Default extension without a dot, or `undefined` when unknown |
+| `getExtension(contentType)` | `string`: MIME type or Content-Type header | Default extension without a dot, or `undefined` when the type is unknown or has no extensions |
 | `getMeta(contentType)` | `string`: MIME type or Content-Type header | Read-only `TypeMeta`, or `undefined` when unknown |
 | `register(definitions, options?)` | `TypeMetaCollection` and optional `RegisterOptions` | `true` when everything was applied, otherwise `false` |
 | `unregister(contentType)` | `string`: MIME type or Content-Type header | `true` when a record was removed, otherwise `false` |
