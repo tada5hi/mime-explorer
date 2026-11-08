@@ -1,131 +1,225 @@
+import {
+    ExtensionConflictError,
+    InvalidExtensionError,
+    InvalidTypeError,
+    MetadataConflictError,
+    MissingExtensionsError,
+    RegistrationError,
+} from './errors';
+import type { MimeExplorerError } from './errors';
 import type {
     IMimeExplorer,
+    RegisterOptions,
     TypeMeta,
     TypeMetaCollection,
     TypeMetaInput,
 } from './types';
-import { hasOwnProperty } from './utils';
+
+type Records = Map<string, TypeMeta>;
+type Owners = Map<string, string>;
+type Failure = () => MimeExplorerError;
 
 export class MimeExplorer implements IMimeExplorer {
-    protected metaMap : Record<string, TypeMeta>;
+    #records: Records = new Map();
 
-    protected extensionMap : Record<string, string>;
+    #owners: Owners = new Map();
 
-    // ----------------------------------------------
-
-    constructor(collection: TypeMetaCollection = {}) {
-        this.metaMap = Object.create(null);
-        this.extensionMap = Object.create(null);
-
-        this.defineTypes(collection);
+    /**
+     * Create an independent registry, empty by default. Never throws: the first definition
+     * of a type or extension wins and unusable entries are skipped without being reported.
+     *
+     * @param definitions - Extensions or metadata per MIME type, such as the `mime-explorer/db` export.
+     */
+    constructor(definitions: TypeMetaCollection = {}) {
+        applyDefinitions(definitions, this.#records, this.#owners);
     }
 
-    // ----------------------------------------------
+    register(definitions: TypeMetaCollection, options: RegisterOptions = {}): readonly MimeExplorerError[] {
+        if (!options.throwOnFailure) {
+            return applyDefinitions(definitions, this.#records, this.#owners).map((createError) => createError());
+        }
 
-    /** Register a MIME type and its extensions/metadata, keeping existing definitions. */
-    defineType(mimeType: string, value: string[] | TypeMetaInput): void {
-        let meta : TypeMeta = { extensions: [] };
+        const records = new Map(this.#records);
+        const owners = new Map(this.#owners);
+        const errors = applyDefinitions(definitions, records, owners).map((createError) => createError());
 
-        if (Array.isArray(value)) {
-            meta.extensions = value;
+        if (errors.length > 0) {
+            throw new RegistrationError(errors);
+        }
+
+        this.#records = records;
+        this.#owners = owners;
+
+        return errors;
+    }
+
+    unregister(contentType: string): boolean {
+        const type = readMimeType(contentType);
+        const record = type && this.#records.get(type);
+
+        if (!type || !record) {
+            return false;
+        }
+
+        this.#records.delete(type);
+
+        for (const extension of record.extensions) {
+            if (this.#owners.get(extension) === type) {
+                this.#owners.delete(extension);
+            }
+        }
+
+        return true;
+    }
+
+    getMeta(contentType: string): TypeMeta | undefined {
+        const type = readMimeType(contentType);
+
+        return type ? this.#records.get(type) : undefined;
+    }
+
+    getExtension(contentType: string): string | undefined {
+        return this.getMeta(contentType)?.extensions[0];
+    }
+
+    getType(path: string): string | undefined {
+        const extension = readExtension(path);
+
+        return extension ? this.#owners.get(extension) : undefined;
+    }
+}
+
+/** Apply what is usable and describe the rest; errors are created only when a caller needs them. */
+function applyDefinitions(definitions: TypeMetaCollection, records: Records, owners: Owners): Failure[] {
+    const failures: Failure[] = [];
+
+    for (const [mimeType, value] of Object.entries(definitions)) {
+        applyDefinition(mimeType, value, records, owners, failures);
+    }
+
+    return failures;
+}
+
+function applyDefinition(
+    mimeType: string,
+    value: readonly string[] | TypeMetaInput,
+    records: Records,
+    owners: Owners,
+    failures: Failure[],
+): void {
+    const type = readMimeType(mimeType);
+
+    if (!type) {
+        failures.push(() => new InvalidTypeError(mimeType));
+
+        return;
+    }
+
+    const definition = readDefinition(value);
+    const declared = Array.isArray(definition.extensions) ? definition.extensions as readonly string[] : [];
+
+    if (declared.length === 0) {
+        failures.push(() => new MissingExtensionsError(type));
+
+        return;
+    }
+
+    const extensions = new Set<string>();
+
+    for (const input of declared) {
+        const extension = parseDeclaredExtension(input);
+
+        if (extension) {
+            extensions.add(extension);
         } else {
-            meta = {
-                ...meta,
-                ...value,
-            };
-        }
-
-        if (typeof meta.extensions === 'undefined') {
-            meta.extensions = [];
-        }
-
-        if (meta.extensions.length === 0) {
-            return;
-        }
-
-        meta.extensions = meta.extensions.map((t) => t.toLowerCase());
-
-        mimeType = mimeType.toLowerCase();
-
-        for (let j = 0; j < meta.extensions.length; j++) {
-            const ext = meta.extensions[j] as string;
-
-            if (!hasOwnProperty(this.extensionMap, ext)) {
-                this.extensionMap[ext] = mimeType;
-            }
-        }
-
-        if (!hasOwnProperty(this.metaMap, mimeType)) {
-            this.metaMap[mimeType] = meta;
+            failures.push(() => new InvalidExtensionError(type, String(input)));
         }
     }
 
-    /** Register definitions keyed by MIME type, such as { 'text/plain': ['txt'] }. */
-    defineTypes(items: TypeMetaCollection): void {
-        const keys = Object.keys(items);
+    if (extensions.size === 0) {
+        return;
+    }
 
-        for (const key of keys) {
-            if (!hasOwnProperty(items, key) || !items[key]) {
-                continue;
-            }
+    for (const extension of extensions) {
+        const owner = owners.get(extension);
 
-            this.defineType(key, items[key]);
+        if (owner === undefined) {
+            owners.set(extension, type);
+        } else if (owner !== type) {
+            failures.push(() => new ExtensionConflictError(type, extension, owner));
         }
     }
 
-    /** Remove a bare MIME key case-insensitively and every extension owned by it. */
-    undefineType(mimeType: string): void {
-        mimeType = mimeType.toLowerCase();
+    const existing = records.get(type);
 
-        if (!hasOwnProperty(this.metaMap, mimeType)) {
-            return;
-        }
-
-        delete this.metaMap[mimeType];
-
-        const keys = Object.keys(this.extensionMap);
-
-        for (const extension of keys) {
-            if (this.extensionMap[extension] === mimeType) {
-                delete this.extensionMap[extension];
-            }
-        }
+    if (existing && hasDifferentMetadata(existing, definition)) {
+        failures.push(() => new MetadataConflictError(type));
     }
 
-    /** Read metadata for a MIME type or Content-Type header, ignoring case and parameters. */
-    getMetaByType(mimeType: string): TypeMeta | undefined {
-        const type = /^\s*([^;\s]*)/.test(mimeType) && RegExp.$1;
+    records.set(type, freezeRecord(existing ?
+        { ...existing, extensions: [...new Set([...existing.extensions, ...extensions])] } :
+        { ...definition, extensions: [...extensions] }));
+}
 
-        if (!type) {
-            return undefined;
-        }
-
-        return this.metaMap[type.toLowerCase()];
+function readDefinition(value: unknown): TypeMetaInput {
+    if (Array.isArray(value)) {
+        return { extensions: value };
     }
 
-    /** Get the default extension for a MIME type or Content-Type header, without a leading *. */
-    getExtensionByType(mimeType: string): string | undefined {
-        const meta = this.getMetaByType(mimeType);
+    return typeof value === 'object' && value !== null ? value : {};
+}
 
-        const [ext] = meta?.extensions || [];
+function hasDifferentMetadata(record: TypeMeta, definition: TypeMetaInput): boolean {
+    return Object.entries(definition).some(([key, value]) => key !== 'extensions' &&
+        value !== undefined &&
+        record[key as keyof TypeMeta] !== value);
+}
 
-        if (!ext) {
-            return undefined;
-        }
+function freezeRecord(record: TypeMeta): TypeMeta {
+    return Object.freeze({ ...record, extensions: Object.freeze([...record.extensions]) });
+}
 
-        return ext[0] !== '*' ? ext : ext.slice(1);
+/** The MIME key of a MIME type or Content-Type header: lowercase, without whitespace or parameters. */
+function readMimeType(contentType: unknown): string | undefined {
+    if (typeof contentType !== 'string') {
+        return undefined;
     }
 
-    /** Get a MIME type from an extension, filename or path, such as '.json' or '/files/a.json'. */
-    getTypeByExtension(extensionOrPath: string): string | undefined {
-        const separator = Math.max(extensionOrPath.lastIndexOf('/'), extensionOrPath.lastIndexOf('\\'));
-        const last = extensionOrPath.slice(separator + 1);
-        const dot = last.lastIndexOf('.');
+    const [type] = contentType.trim().split(/[;\s]/, 1);
 
-        if (dot <= 0 && separator !== -1) {
-            return undefined;
-        }
+    return type ? type.toLowerCase() : undefined;
+}
 
-        return this.extensionMap[last.slice(dot + 1).toLowerCase()];
+/** The lowercase extension of a bare or dotted extension, file name or path. */
+function readExtension(path: unknown): string | undefined {
+    if (typeof path !== 'string') {
+        return undefined;
     }
+
+    const separator = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    const name = path.slice(separator + 1);
+    const dot = name.lastIndexOf('.');
+
+    if (dot <= 0 && separator !== -1) {
+        return undefined;
+    }
+
+    return name.slice(dot + 1).toLowerCase() || undefined;
+}
+
+/** The extension of a definition entry, which must read back unchanged apart from one leading dot. */
+function parseDeclaredExtension(input: unknown): string | undefined {
+    if (typeof input !== 'string') {
+        return undefined;
+    }
+
+    const bare = input.startsWith('.') ? input.slice(1) : input;
+
+    if (bare.startsWith('*') || /\s/.test(bare)) {
+        return undefined;
+    }
+
+    const extension = readExtension(input);
+
+    return extension === bare.toLowerCase() ? extension : undefined;
 }

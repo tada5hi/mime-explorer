@@ -1,6 +1,6 @@
 # Testing
 
-`npm test` runs Vitest using `test/vitest.config.mts`. `npm run test:coverage` enables the configured coverage provider and existing thresholds; keep those thresholds and source inclusion rules intact.
+`npm test` type-checks `test/types/` through `npm run test:types`, then runs Vitest using `test/vitest.config.mts`. `npm run test:coverage` enables the configured coverage provider and existing thresholds; keep those thresholds and source inclusion rules intact.
 
 `npm run build` regenerates the MIME database before bundling; change the generator/source dependency rather than hand-editing generated data.
 

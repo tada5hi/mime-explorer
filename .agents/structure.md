@@ -3,6 +3,7 @@
 | Source | Responsibility |
 |---|---|
 | `src/module.ts` | Instance-based MIME registry and lookups; no bundled database import |
+| `src/errors/` | Error classes built on the external `@ebec/core` `BaseError`; each sets its own `name` and `code` so minified builds keep them |
 | `src/db.json` | Generated from `mime-db` by `bin/db.js` during `npm run build`; edit the dependency or generator |
 | `src/db.ts` | Typed default database export for `mime-explorer/db` |
 | `bin/db.js` | Database generator run by the build |
