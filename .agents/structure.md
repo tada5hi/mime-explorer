@@ -4,9 +4,9 @@
 |---|---|
 | `src/module.ts` | Instance-based MIME registry and lookups; no bundled database import |
 | `src/errors/` | Error classes built on the external `@ebec/core` `BaseError`; the base is abstract and each concrete class sets its own `name` and `code` so minified builds keep them |
-| `src/db.json` | Generated from `mime-db` by `bin/db.js` during `npm run build`; edit the dependency or generator |
+| `src/db.json` | Generated from `mime-db` by `bin/db.cjs` during `npm run build`; edit the dependency or generator |
 | `src/db.ts` | Typed default database export for `mime-explorer/db` |
-| `bin/db.js` | Database generator run by the build |
+| `bin/db.cjs` | Database generator run by the build |
 | `src/index.ts` | Public package exports |
 | `tsdown.config.mts` | JavaScript build configuration |
 | `.github/assets/` | README logo and MIME lookup diagram |

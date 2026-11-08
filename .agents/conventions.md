@@ -6,6 +6,6 @@ Use the installed shared ESLint configuration through the repository's lint comm
 
 Keep the runtime engine and emitted JavaScript contract separate from tooling requirements. Bundler upgrades must retain output names, module formats, declaration generation and source-map behavior. Avoid introducing runtime APIs unsupported by the package's declared engine or documented consumers.
 
-No dependency overrides are declared. TypeScript stays on 6.0.x while `typescript-eslint` requires `<6.1.0`; upgrade when its peer range supports a newer compiler. Keep `@types/node` on 24.x while development and CI use Node 24; advance it with that baseline. Module resolution uses Node16 and `verbatimModuleSyntax: false` so declaration builds support the existing CommonJS source and both package entrypoints.
+No dependency overrides are declared. TypeScript stays on 6.0.x while `typescript-eslint` requires `<6.1.0`; upgrade when its peer range supports a newer compiler. Keep `@types/node` on 24.x while development and CI use Node 24; advance it with that baseline. The package is ESM-only. Module resolution uses Node16 with explicit `.js` extensions on relative imports, so emitted declarations resolve for ESM consumers; repository scripts that use CommonJS carry a `.cjs` extension.
 
 Release configuration lives in `.github/workflows/` and the release-please files. Changes to release triggers must preserve the separation between creating release metadata and publishing artifacts.

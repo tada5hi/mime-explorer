@@ -7,7 +7,7 @@
 <p align="center">
     <b>Look up MIME types, file extensions and metadata, and register your own mappings.</b><br>
     Use one API for file paths, Content-Type values and custom formats.<br>
-    The MIME database is bundled, with ESM, CommonJS and TypeScript declarations.
+    The MIME database is bundled, as ESM with TypeScript declarations.
 </p>
 
 <p align="center">
@@ -65,7 +65,7 @@ Each `MimeExplorer` instance owns two indexes, initialized from the definitions 
 npm install mime-explorer
 ```
 
-The package provides ESM and CommonJS entrypoints and TypeScript declarations. Its one runtime dependency is [`@ebec/core`](https://github.com/tada5hi/ebec), the base of its error classes; it has no peer dependencies. It does not declare a Node.js runtime minimum. Contributor tools require Node 24.11 or newer within the 24.x line.
+The package is ESM-only and ships TypeScript declarations. CommonJS code can `require()` it on Node.js 20.19, 22.12 or newer; older runtimes need `import()`. `require()` callers load a separate CommonJS copy of `@ebec/core`, so catch failures with `instanceof MimeExplorerError` rather than `BaseError`. CommonJS TypeScript needs `"module": "NodeNext"`, because `Node16` rejects ESM-only imports from `.cts` files. Its one runtime dependency is [`@ebec/core`](https://github.com/tada5hi/ebec), the base of its error classes; it has no peer dependencies. It does not declare a Node.js runtime minimum. Contributor tools require Node 24.11 or newer within the 24.x line.
 
 ## Usage
 
@@ -82,13 +82,13 @@ For CommonJS:
 
 ```javascript
 const { MimeExplorer } = require('mime-explorer');
-const db = require('mime-explorer/db');
+const { default: db } = require('mime-explorer/db');
 
 const mime = new MimeExplorer(db);
 mime.getType('/uploads/report.JSON'); // 'application/json'
 ```
 
-`new MimeExplorer()` creates an empty registry for custom mappings. Importing `mime-explorer` alone does not load the database or create a shared registry. The `mime-explorer/db` entrypoint provides a typed ESM default export and the database directly through CommonJS `require()`, without JSON import attributes.
+`new MimeExplorer()` creates an empty registry for custom mappings. Importing `mime-explorer` alone does not load the database or create a shared registry. The `mime-explorer/db` entrypoint provides the database as a typed default export, without JSON import attributes.
 
 ### Find a MIME type
 

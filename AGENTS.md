@@ -1,6 +1,6 @@
 # mime-explorer: Agent Guide
 
-A MIME lookup library with generated MIME data and dual module builds.
+A MIME lookup library with generated MIME data and an ESM build.
 
 ## Quick Reference
 

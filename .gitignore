@@ -9,5 +9,6 @@ coverage
 npm-debug.log*
 .idea
 reports
-/docs/
+/docs/*
+!/docs/adr/
 .agents/plans/

@@ -83,6 +83,10 @@ jobs:
                 run: |
                     npm run test
 
+            -   name: Test published entrypoints
+                run: |
+                    npm run test:package
+
 
     coverage:
         name: Coverage

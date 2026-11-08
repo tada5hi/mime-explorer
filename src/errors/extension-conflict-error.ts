@@ -1,4 +1,4 @@
-import { MimeExplorerError } from './mime-explorer-error';
+import { MimeExplorerError } from './mime-explorer-error.js';
 
 /** An extension already belongs to another MIME type, which keeps the `getType()` result. */
 export class ExtensionConflictError extends MimeExplorerError {
